@@ -30,6 +30,9 @@ window.ICONS = {
   bell: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
   mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
   play: '<path d="M7 4.5v15l13-7.5z" fill="currentColor"/>',
+  next: '<path d="M6 5l9 7-9 7z" fill="currentColor"/><path d="M18.5 5v14"/>',
+  prev: '<path d="M18 5l-9 7 9 7z" fill="currentColor"/><path d="M5.5 5v14"/>',
+  plug: '<path d="M9 3v5M15 3v5"/><path d="M7 8h10v3a5 5 0 0 1-10 0z"/><path d="M12 16v5"/>',
   pause: '<path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z" fill="currentColor"/>',
   undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -44,5 +47,6 @@ window.ICONS = {
   cloud: '<path d="M7 18.5h10.2a4.3 4.3 0 0 0 .4-8.6A6.2 6.2 0 0 0 5.8 11.6 3.5 3.5 0 0 0 7 18.5z"/>',
   rain: '<path d="M7 15h10.2a4.3 4.3 0 0 0 .4-8.6A6.2 6.2 0 0 0 5.8 8.1 3.5 3.5 0 0 0 7 15z"/><path d="M8.5 18l-1 3M12.5 18l-1 3M16.5 18l-1 3"/>',
   partly: '<path d="M8.5 2.5v1.3M3.4 4.6l.9.9M1.8 9.6h1.3M13.6 4.6l-.9.9"/><path d="M5.3 12.3a4 4 0 0 1 6.9-4.4"/><path d="M9.5 20h8.3a3.6 3.6 0 0 0 .3-7.2 5.2 5.2 0 0 0-9.9 1.4A2.9 2.9 0 0 0 9.5 20z"/>',
+  baby: '<circle cx="12" cy="12" r="8.5"/><path d="M9.2 10.5h.01M14.8 10.5h.01M9.5 14.5c.7.8 1.5 1.2 2.5 1.2s1.8-.4 2.5-1.2M12 3.5c-.4-1.4.6-2 1.6-1.6"/>',
   moon: '<path d="M20 14.5A8.2 8.2 0 0 1 9.5 4 8.2 8.2 0 1 0 20 14.5z"/>'
 };

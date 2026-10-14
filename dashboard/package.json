@@ -7,9 +7,15 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "vite build && wrangler deploy"
+    "deploy": "vite build && wrangler deploy",
+    "google-login": "node server/google-login.mjs",
+    "nest-login": "node server/nest-login.mjs"
   },
   "devDependencies": {
+    "bonjour-service": "^1.4.4",
+    "castv2-client": "^1.2.0",
+    "fast-xml-parser": "^5.11.2",
+    "ical.js": "^2.2.1",
     "vite": "^8.3.1",
     "wrangler": "^4.145.0"
   }

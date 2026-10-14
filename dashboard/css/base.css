@@ -271,28 +271,6 @@ button.card:active, .h-hero:active, .h-photo:active { transform: scale(.985); }
 .tk-btn--light.tk-btn--solid { background: #fff; color: var(--alert); }
 
 
-/* ---------------------------------------------------------------- demo drawer */
-.demo { position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 90; pointer-events: none; }
-.demo.is-open { pointer-events: auto; background: rgba(0, 0, 0, .3); }
-.demo-panel {
-  position: absolute; right: 0; top: 0; bottom: 0; width: 460px; padding: 28px;
-  background: var(--ink); color: #fff; overflow: auto;
-  transform: translateX(100%);
-}
-.demo.is-open .demo-panel { transform: none; }
-.demo-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
-.demo-head h2 { font-size: 44px; line-height: 1; }
-.demo-x { width: var(--tap); height: var(--tap); border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .1); }
-.demo-sec { margin-bottom: 22px; }
-.demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-.demo-grid button {
-  min-height: var(--tap); border-radius: 14px; padding: 0 16px;
-  background: rgba(255, 255, 255, .1);
-  font-size: 18px; font-weight: 700;
-}
-.demo-grid button:active, .demo-grid button.is-on { background: #fff; color: var(--ink); }
-.demo-note { font-size: 16px; color: rgba(255, 255, 255, .6); }
-
 /* ---------------------------------------------------------------- night dashboard (tap on night clock) */
 .stage[data-mode="nightdash"] > .rail,
 .stage[data-mode="nightdash"] > .views {
