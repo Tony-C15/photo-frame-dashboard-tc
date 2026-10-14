@@ -1,8 +1,8 @@
-// Core shell: router, demo clock, idle/ambient, toasts, sheets, helpers.
+// Core shell: router, clock, idle/ambient, toasts, sheets, helpers.
 (function () {
   'use strict';
   var D = window.DATA;
-  var App = window.App = { state: D, views: {}, current: null, mode: 'day', calMode: 'normal' };
+  var App = window.App = { state: D, views: {}, current: null, mode: 'day' };
   var $ = App.$ = function (s, r) { return (r || document).querySelector(s); };
   App.$$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
@@ -11,16 +11,9 @@
   App.on = function (e, fn) { (handlers[e] = handlers[e] || []).push(fn); };
   App.emit = function (e, a) { (handlers[e] || []).forEach(function (fn) { fn(a); }); };
 
-  // ------------------------------------------------------------ time (demo clock)
-  var offset = 0;
-  App.now = function () { return new Date(Date.now() + offset); };
-  App.setTime = function (h, m) {
-    if (h == null) offset = 0;
-    else { var d = new Date(); d.setHours(h, m, 0, 0); offset = d - Date.now(); }
-    lastMin = -1;
-    App.emit('time');
-    App.rerender();
-  };
+  // ------------------------------------------------------------ time
+  var lastMin = -1;
+  App.now = function () { return new Date(); };
   App.dayStart = function (d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   App.addDays = function (d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; };
   App.sameDay = function (a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); };
@@ -90,14 +83,19 @@
 
   // ------------------------------------------------------------ calendar helpers
   App.events = function () {
-    var list = D.events.slice();
-    var today = App.dayStart(App.now());
-    if (App.calMode === 'busy') list = list.concat(D.busyExtras);
-    if (App.calMode === 'empty') list = list.filter(function (e) { return e.allDay || !App.sameDay(e.start, today); });
-    return list;
+    return D.events;
   };
   App.isFamily = function (e) { return e.people.length >= D.people.length; };
-  App.evColor = function (e) { return App.isFamily(e) ? D.family : App.person(e.people[0]); };
+  // Events from a live calendar can carry their own colour (e.color, #rrggbb) so sources are tellable apart.
+  var custom = {};
+  function customColor(hex) {
+    if (!custom[hex]) {
+      var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+      custom[hex] = { id: 'custom', name: '', color: hex, rgb: r + ' ' + g + ' ' + b, ink: (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#111111' : '#FFFFFF' };
+    }
+    return custom[hex];
+  }
+  App.evColor = function (e) { return e.color ? customColor(e.color) : App.isFamily(e) ? D.family : App.person(e.people[0]); };
   App.timedOn = function (day, pid) {
     var s = App.dayStart(day), e = App.addDays(s, 1);
     return App.events().filter(function (ev) {
@@ -313,7 +311,6 @@
   }
 
   // ------------------------------------------------------------ clock tick
-  var lastMin = -1;
   function tick() {
     var n = App.now();
     App.emit('second', n);
@@ -327,7 +324,6 @@
 
   // ------------------------------------------------------------ boot
   App.start = function () {
-    App.setTime(15, 18); // demo default: a busy weekday afternoon
     fit();
     window.addEventListener('resize', fit);
     // Switch tabs the instant a finger lands (pointerdown), not on release. Keyboard "clicks"
@@ -347,7 +343,6 @@
     setInterval(tick, 1000);
     App.emit('ready');
     refreshStale(1500);
-    setTimeout(function () { App.toast('Tip: press and hold the <b>clock</b> in the sidebar for demo controls', { ms: 6000, icon: 'bolt' }); }, 1200);
   };
   document.addEventListener('DOMContentLoaded', function () { App.start(); });
 })();

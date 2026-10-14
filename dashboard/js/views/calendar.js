@@ -267,6 +267,7 @@
       '<div class="evs-row">' + App.icon('person', 28) + '<div class="evs-people">' + (fam ? D.people : e.people.map(App.person)).map(function (x) {
         return '<span class="chip" style="' + App.pstyle(x) + '">' + App.avatar(x, 32) + x.name + '</span>';
       }).join('') + '</div></div>' +
+      (e.cal ? '<div class="evs-row">' + App.icon('calendar', 28) + '<div><b>' + App.esc(e.cal) + '</b></div></div>' : '') +
       (e.notes ? '<div class="evs-notes serif">“' + App.esc(e.notes) + '”</div>' : '') +
       '</div></div>', { cls: 'sheet--event' });
   };

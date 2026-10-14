@@ -127,7 +127,7 @@
     return '<div class="label">Home</div>' +
       '<div class="h-st-row">' + App.icon('bulb', 24) + '<b class="num">' + lights + '</b><span>lights on</span></div>' +
       '<div class="h-st-row' + (secure ? '' : ' is-warn') + '">' + App.icon(secure ? 'lock' : 'unlock', 24) + '<span>' + secText + '</span></div>' +
-      '<div class="h-st-row">' + App.icon('thermo', 24) + '<b class="num">' + D.climate.current + '°</b><span>inside</span></div>';
+      (D.climate.live ? '<div class="h-st-row">' + App.icon('thermo', 24) + '<b class="num">' + App.deg(D.climate.current) + '°</b><span>inside</span></div>' : '');
   }
 
   function paint() {
@@ -157,7 +157,7 @@
           '<div class="h-presence"></div>' +
           '<div class="h-main"><div class="h-hero-slot"></div><div class="h-lanes" ></div></div>' +
           '<div class="h-side">' +
-          '  <button class="h-photo" data-go="photos"><div class="h-photo-stage"></div><div class="h-photo-cap"></div></button>' +
+          '  <button class="h-photo"><div class="h-photo-stage"></div><div class="h-photo-cap"></div></button>' +
           '  <button class="h-chores card" data-go="tasks"></button>' +
           '  <div class="h-duo"><button class="h-shop card" data-go="shopping"></button><button class="h-status card" data-go="control"></button></div>' +
           '</div></div>';
