@@ -20,7 +20,8 @@
 .hb-sleep { --c: var(--member-sky); --c-soft: var(--member-sky-soft); }
 .hb-feed { --c: var(--member-apricot); --c-soft: var(--member-apricot-soft); }
 .hb-diaper { --c: var(--member-sage); --c-soft: var(--member-sage-soft); }
-.hb-solids, .hb-next { --c: var(--member-lilac); --c-soft: var(--member-lilac-soft); }
+.hb-solids { --c: var(--member-blush); --c-soft: var(--member-blush-soft); }
+.hb-next { --c: var(--member-lilac); --c-soft: var(--member-lilac-soft); }
 .hb-card.is-live { background: var(--c-soft); color: var(--ink); }
 .hb-head { display: flex; align-items: center; gap: 10px; }
 .hb-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--c); color: var(--on-member); flex: none; }
