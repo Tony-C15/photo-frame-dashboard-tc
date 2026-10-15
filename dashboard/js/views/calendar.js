@@ -1,9 +1,9 @@
-// Calendar: Today-by-person lanes (default), 3-day, rolling week, month.
+// Calendar: rolling week (default), Today, 3-day, month.
 (function () {
   'use strict';
   var D = window.DATA;
   var PX = 72, START = 6, END = 23; // 72px per hour, 6 AM → 11 PM
-  var V = { mode: 'day', date: null, el: null, scroll: null };
+  var V = { mode: 'week', date: null, el: null, scroll: null };
   var MODES = [['day', 'Today'], ['3day', '3 Day'], ['week', 'Week'], ['month', 'Month']];
 
   function y(d) { return ((d.getHours() + d.getMinutes() / 60) - START) * PX; }
@@ -46,18 +46,15 @@
     var now = App.now();
     var p = opts.color || App.evColor(e);
     var mins = (e.end - e.start) / 60000;
-    var cls = 'ev' + (e.end <= now ? ' is-past' : '') + (e.start <= now && e.end > now ? ' is-now' : '') + (mins < 45 ? ' is-short' : '') + (App.isFamily(e) ? ' is-family' : '') + (opts.half ? ' is-half' : '');
-    var others = opts.lane ? e.people.filter(function (id) { return id !== opts.lane; }) : (e.people.length > 1 && !App.isFamily(e) ? e.people : []);
+    var cls = 'ev' + (e.end <= now ? ' is-past' : '') + (e.start <= now && e.end > now ? ' is-now' : '') + (mins < 45 ? ' is-short' : '') + (opts.half ? ' is-half' : '');
     var travel = e.travel ? '<span class="ev-travel" style="height:' + (e.travel * PX / 60) + 'px"></span>' : '';
     return '<button class="' + cls + '" data-ev="' + e.id + '" style="' + App.pstyle(p) + ';' + style + '">' + travel +
       '<span class="ev-title">' + App.esc(e.title) + '</span>' +
       '<span class="ev-meta">' + App.fmt.range(e.start, e.end) + (e.travel ? ' · <b>' + App.icon('car', 16) + 'Leave ' + App.fmt.time(App.leaveBy(e), false) + '</b>' : '') + '</span>' +
-      (others.length && !App.isFamily(e) ? '<span class="ev-with">' + App.dots(others, 14) + '</span>' : '') +
-      (App.isFamily(e) ? '<span class="ev-with">' + App.dots(D.ALL, 14) + '</span>' : '') +
       '</button>';
   }
 
-  function placeBlocks(list, colorFn, laneId) {
+  function placeBlocks(list) {
     return layout(list).map(function (it) {
       var w = 100 / it.cols, left = it.col * w;
       if (it.more) {
@@ -65,7 +62,7 @@
         return '<button class="ev ev--more" data-more="' + it.more.map(function (e) { return e.id; }).join(',') + '" style="top:' + t + 'px;height:' + h + 'px;left:calc(' + left + '% + 2px);width:calc(' + w + '% - 4px)">+' + it.more.length + '<small>more</small></button>';
       }
       var b = clampTop(it.e, V.date);
-      return evBlock(it.e, 'top:' + b.top + 'px;height:' + b.h + 'px;left:calc(' + left + '% + 2px);width:calc(' + w + '% - 4px)', { lane: laneId, color: colorFn ? colorFn(it.e) : null, half: it.cols > 1 });
+      return evBlock(it.e, 'top:' + b.top + 'px;height:' + b.h + 'px;left:calc(' + left + '% + 2px);width:calc(' + w + '% - 4px)', { half: it.cols > 1 });
     }).join('');
   }
 
@@ -83,29 +80,18 @@
     return '<div class="now-line" style="top:' + y(now) + 'px"><span class="num">' + App.fmt.time(now, false) + '</span></div>';
   }
 
-  // ------------------------------------------------------------ Today (lanes per person)
+  // ------------------------------------------------------------ Today
   function dayView() {
     var day = V.date;
-    var fam = App.timedOn(day).filter(App.isFamily);
     var allDay = App.allDayOn(day);
     var ad = allDay.length ? '<div class="allday"><div class="gutter label">All day</div><div class="allday-grid">' + allDay.map(function (e) {
-      var fam2 = App.isFamily(e);
-      var idx = D.people.map(function (p) { return p.id; }).indexOf(e.people[0]);
-      var col = fam2 ? '1 / -1' : (idx + 1) + ' / span 1';
       var s = App.dayStart(day), spanDays = Math.round((e.end - e.start) / 864e5), dayN = Math.round((s - e.start) / 864e5) + 1;
-      return '<button class="ad' + (e.start < s ? ' ad--cont' : '') + '" data-ev="' + e.id + '" style="grid-column:' + col + ';' + App.pstyle(App.evColor(e)) + '">' +
+      return '<button class="ad' + (e.start < s ? ' ad--cont' : '') + '" data-ev="' + e.id + '" style="' + App.pstyle(App.evColor(e)) + '">' +
         (e.start < s ? App.icon('left', 16) : '') + App.esc(e.title) + (spanDays > 1 ? ' <small>Day ' + dayN + ' of ' + spanDays + '</small>' : '') + '</button>';
     }).join('') + '</div></div>' : '';
     var grid = '<div class="grid-scroll"><div class="grid" style="height:' + (END - START) * PX + 'px">' +
       '<div class="hours">' + hoursCol() + '</div>' +
-      '<div class="lanes">' + D.people.map(function (p) {
-        var list = App.timedOn(day, p.id).filter(function (e) { return !App.isFamily(e); });
-        return '<div class="lane" style="' + App.pstyle(p) + '">' + placeBlocks(list, null, p.id) + '</div>';
-      }).join('') +
-      '<div class="lane-fam">' + fam.map(function (e) {
-        var b = clampTop(e, day);
-        return evBlock(e, 'top:' + b.top + 'px;height:' + b.h + 'px;left:2px;right:2px');
-      }).join('') + '</div>' +
+      '<div class="lanes"><div class="lane">' + placeBlocks(App.timedOn(day)) + '</div>' +
       nowLine([day]) + '</div>' +
       '</div></div>';
     var empty = !App.timedOn(day).length ? '<div class="cal-empty serif">Nothing on the calendar.<br><i>A rare, quiet day.</i></div>' : '';
@@ -158,7 +144,7 @@
             '<span class="wk-t">' + App.fmt.time(e.start, false) + '</span><span class="wk-n">' + App.esc(e.title) + '</span></button>';
         }).join('') +
         (more > 0 ? '<button class="wk-more" data-day="' + (+d) + '">+' + more + ' more</button>' : '') +
-        (!list.length && !ad.length ? '<div class="wk-free serif"><i>Free</i></div>' : '') +
+        (!list.length && !ad.length ? '<div class="wk-free">Nothing planned</div>' : '') +
         '</div>';
     }).join('') + '</div>';
   }
@@ -197,7 +183,6 @@
       '<button class="icon-btn" data-nav="1" aria-label="Next">' + App.icon('right', 24) + '</button>' +
       '<button class="btn btn--ghost' + (isToday ? ' is-hidden' : '') + '" data-today>Today</button>' +
       '<div class="seg">' + MODES.map(function (m) { return '<button class="' + (V.mode === m[0] ? 'is-on' : '') + '" data-mode="' + m[0] + '">' + m[1] + '</button>'; }).join('') + '</div>' +
-      '<button class="fab" data-add aria-label="Add event">' + App.icon('plus', 26) + '</button>' +
       '</header>';
   }
 
@@ -237,7 +222,6 @@
       return render();
     }
     if ((t = e.target.closest('[data-day]'))) { V.mode = 'day'; V.date = new Date(+t.dataset.day); V.scroll = null; return render(); }
-    if ((t = e.target.closest('[data-add]'))) return addSheet();
   }
 
   // Swipe left/right to change day (the only swipe gesture in the app)
@@ -255,7 +239,7 @@
   // ------------------------------------------------------------ sheets
   App.eventSheet = function (e) {
     if (!e) return;
-    var p = App.evColor(e), fam = App.isFamily(e);
+    var p = App.evColor(e);
     App.sheet(
       '<div class="evs" style="' + App.pstyle(p) + '">' +
       '<div class="evs-band"><div class="label label--on">' + App.fmt.rel(e.start) + ' · ' + App.fmt.month(e.start) + ' ' + e.start.getDate() + '</div>' +
@@ -264,9 +248,6 @@
       '<div class="evs-body">' +
       (e.travel ? '<div class="evs-row evs-leave">' + App.icon('car', 28) + '<div><b>Leave by ' + App.fmt.time(App.leaveBy(e)) + '</b><span>' + e.travel + ' min drive in current traffic</span></div></div>' : '') +
       (e.loc ? '<div class="evs-row">' + App.icon('pin', 28) + '<div><b>' + App.esc(e.loc) + '</b><span>Tap to send directions to phone</span></div></div>' : '') +
-      '<div class="evs-row">' + App.icon('person', 28) + '<div class="evs-people">' + (fam ? D.people : e.people.map(App.person)).map(function (x) {
-        return '<span class="chip" style="' + App.pstyle(x) + '">' + App.avatar(x, 32) + x.name + '</span>';
-      }).join('') + '</div></div>' +
       (e.cal ? '<div class="evs-row">' + App.icon('calendar', 28) + '<div><b>' + App.esc(e.cal) + '</b></div></div>' : '') +
       (e.notes ? '<div class="evs-notes serif">“' + App.esc(e.notes) + '”</div>' : '') +
       '</div></div>', { cls: 'sheet--event' });
@@ -282,72 +263,8 @@
     });
   }
 
-  function addSheet() {
-    var now = App.now();
-    var st = { who: [], day: 0, time: '15:30', dur: 60, title: '' };
-    var days = [0, 1, 2, 3, 4];
-    var times = [['08:00', '8 AM'], ['12:00', 'Noon'], ['15:30', '3:30 PM'], ['16:30', '4:30 PM'], ['18:00', '6 PM'], ['19:30', '7:30 PM']];
-    var ideas = ['Soccer', 'Playdate', 'Dentist', 'Dinner out', 'Swim', 'Birthday party'];
-    App.sheet(
-      '<div class="sheet-pad add">' +
-      '<div class="label">New event</div>' +
-      '<input class="big-input serif" placeholder="What’s happening?" data-f="title">' +
-      '<div class="chips">' + ideas.map(function (i) { return '<button class="chip chip--ghost" data-idea="' + i + '">' + i + '</button>'; }).join('') + '</div>' +
-      '<div class="label">Who</div><div class="add-who">' + D.people.map(function (p) {
-        return '<button class="who-btn" data-who="' + p.id + '" style="' + App.pstyle(p) + '">' + App.avatar(p, 56) + '<span>' + p.name + '</span></button>';
-      }).join('') + '<button class="who-btn" data-who="all" style="' + App.pstyle(D.family) + '">' + App.avatar(D.family, 56) + '<span>Everyone</span></button></div>' +
-      '<div class="add-row"><div><div class="label">When</div><div class="chips">' + days.map(function (i) {
-        var d = App.addDays(now, i);
-        return '<button class="chip' + (i === 0 ? ' is-on' : '') + '" data-dayi="' + i + '">' + (i < 2 ? App.fmt.rel(d) : App.fmt.dayShort(d) + ' ' + d.getDate()) + '</button>';
-      }).join('') + '</div></div></div>' +
-      '<div class="add-row"><div><div class="label">Time</div><div class="chips">' + times.map(function (t) {
-        return '<button class="chip' + (t[0] === st.time ? ' is-on' : '') + '" data-time="' + t[0] + '">' + t[1] + '</button>';
-      }).join('') + '</div></div>' +
-      '<div><div class="label">Length</div><div class="chips">' + [[30, '30m'], [60, '1h'], [120, '2h']].map(function (t) {
-        return '<button class="chip' + (t[0] === st.dur ? ' is-on' : '') + '" data-dur="' + t[0] + '">' + t[1] + '</button>';
-      }).join('') + '</div></div></div>' +
-      '<div class="sheet-actions"><button class="btn btn--ghost" data-close>Cancel</button><button class="btn btn--solid" data-save>Add to calendar</button></div>' +
-      '</div>', {
-      cls: 'sheet--wide',
-      onMount: function (s, close) {
-        var input = s.querySelector('[data-f=title]');
-        s.addEventListener('click', function (ev) {
-          var t = ev.target.closest('button');
-          if (!t) return;
-          if (t.dataset.idea) { input.value = t.dataset.idea; }
-          if (t.dataset.who) {
-            if (t.dataset.who === 'all') st.who = st.who.length === 4 ? [] : D.ALL.slice();
-            else { var i = st.who.indexOf(t.dataset.who); if (i > -1) st.who.splice(i, 1); else st.who.push(t.dataset.who); }
-            App.$$('[data-who]', s).forEach(function (b) {
-              b.classList.toggle('is-on', b.dataset.who === 'all' ? st.who.length === 4 : st.who.indexOf(b.dataset.who) > -1);
-            });
-          }
-          ['dayi', 'time', 'dur'].forEach(function (k) {
-            if (t.dataset[k] != null) {
-              App.$$('[data-' + k + ']', s).forEach(function (b) { b.classList.toggle('is-on', b === t); });
-              if (k === 'dayi') st.day = +t.dataset.dayi; else if (k === 'dur') st.dur = +t.dataset.dur; else st.time = t.dataset.time;
-            }
-          });
-          if (t.hasAttribute('data-save')) {
-            var title = input.value.trim() || 'New event';
-            var who = st.who.length ? st.who.slice() : ['jordan'];
-            var start = App.addDays(App.dayStart(now), st.day), p = st.time.split(':');
-            start.setHours(+p[0], +p[1]);
-            var e = { id: D._eid(), title: title, people: who, start: start, end: new Date(+start + st.dur * 60000) };
-            D.events.push(e);
-            close();
-            V.date = App.dayStart(start); V.mode = V.mode === 'month' ? 'day' : V.mode; V.scroll = null;
-            render();
-            App.emit('data');
-            App.toast('Added <b>' + App.esc(title) + '</b> · ' + App.fmt.rel(start) + ' ' + App.fmt.time(start), {
-              icon: 'calendar', undo: function () { D.events.splice(D.events.indexOf(e), 1); render(); App.emit('data'); }
-            });
-          }
-        });
-      }
-    });
-  }
-
+  // Opening the calendar tab always lands on the week view, starting today.
+  function home() { V.mode = 'week'; V.date = App.dayStart(App.now()); V.scroll = null; }
   App.register('calendar', {
     show: function (el, opts) {
       if (!V.el) {
@@ -355,10 +272,10 @@
         el.addEventListener('click', onClick);
         swipe(el);
       }
-      if (!V.date) V.date = App.dayStart(App.now());
-      if (!opts.rerender) V.scroll = null;
+      if (!V.date || !opts.rerender) home();
       render();
-    }
+    },
+    resume: function () { home(); render(); }
   });
   App.on('minute', function () {
     if (App.current !== 'calendar') return;
