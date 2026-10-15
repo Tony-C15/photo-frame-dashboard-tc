@@ -161,16 +161,39 @@
       var list = (u && u.childList) || [];
       return Promise.all(list.map(function (c) {
         return get('/childs/' + c.cid).catch(function () { return null; }).then(function (doc) {
-          return { cid: c.cid, name: (doc && doc.childsName) || c.nickname || 'Baby', birthdate: doc && doc.birthdate };
+          return { cid: c.cid, name: (doc && doc.childsName) || c.nickname || 'Baby', birthdate: doc && doc.birthdate,
+            // Huckleberry's own day window: the day starts at morningCutoff and night starts at nightStart
+            morningCutoff: doc && doc.morningCutoff, nightStart: doc && doc.nightStart };
         });
       }));
     });
   };
   // The small "state" docs: running timers + last-event summaries. Cheap, polled often.
   H.live = function (cid) {
-    var names = ['sleep', 'feed', 'diaper', 'activities'];
+    var names = ['sleep', 'feed', 'diaper'];
     return Promise.all(names.map(function (n) { return get('/' + n + '/' + cid); })).then(function (r) {
-      return { sleep: r[0], feed: r[1], diaper: r[2], act: r[3] };
+      return { sleep: r[0], feed: r[1], diaper: r[2] };
+    });
+  };
+  // When the last bath was logged (epoch seconds), or null. Baths are an "activity" (mode "bath"); the
+  // activities/{cid} doc keeps a small prefs.lastBath summary, so this is one cheap read.
+  H.lastBath = function (cid) {
+    return get('/activities/' + cid).then(function (d) {
+      var b = d && d.prefs && d.prefs.lastBath;
+      if (!b || !b.start) return null;
+      return b.start > 1e12 ? b.start / 1000 : b.start;
+    });
+  };
+  // Every solids meal ever logged (small: a handful per day). Used to tell a genuinely new food from one
+  // that was tried before but not within the last 30 days.
+  H.solidsEver = function (cid) {
+    var from = [{ collectionId: 'intervals' }];
+    var single = query('feed/' + cid, { from: from, where: { fieldFilter: { field: { fieldPath: 'mode' }, op: 'EQUAL', value: { stringValue: 'solids' } } } });
+    var batched = query('feed/' + cid, { from: from, where: { fieldFilter: { field: { fieldPath: 'multi' }, op: 'EQUAL', value: { booleanValue: true } } } }).catch(function () { return []; });
+    return Promise.all([single, batched]).then(function (r) {
+      var out = r[0].filter(function (e) { return !e.multi; });
+      r[1].forEach(function (c) { Object.keys(c.data || {}).forEach(function (k) { var e = c.data[k]; if (e && e.mode === 'solids') out.push(e); }); });
+      return out;
     });
   };
   // Recent events for today's totals and the 30-day foods list. Heavier, polled rarely.
@@ -179,9 +202,8 @@
     return Promise.all([
       intervals('feed', cid, now - 30 * day),
       intervals('sleep', cid, now - 3 * day),
-      intervals('diaper', cid, now - 3 * day),
-      intervals('activities', cid, now - 3 * day)
-    ]).then(function (r) { return { feed: r[0], sleep: r[1], diaper: r[2], act: r[3] }; });
+      intervals('diaper', cid, now - 3 * day)
+    ]).then(function (r) { return { feed: r[0], sleep: r[1], diaper: r[2] }; });
   };
 
 })();

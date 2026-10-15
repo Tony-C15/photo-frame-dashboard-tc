@@ -13,7 +13,7 @@
       id: e.id, title: e.title, allDay: e.allDay,
       start: e.allDay ? localDate(e.start) : new Date(e.start),
       end: e.allDay ? localDate(e.end) : new Date(e.end),
-      people: e.people || D.ALL, loc: e.loc, notes: e.notes, color: e.color, cal: e.cal
+      loc: e.loc, notes: e.notes, color: e.color, cal: e.cal
     };
   }
 

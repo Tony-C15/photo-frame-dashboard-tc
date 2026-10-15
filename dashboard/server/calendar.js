@@ -23,7 +23,6 @@ export function parseSources(raw) {
       id: s.id || 'cal' + i,
       name: s.name || s.id || 'Calendar ' + (i + 1),
       url: String(s.url).trim().replace(/^webcal(s?):\/\//i, 'https://'),
-      people: Array.isArray(s.people) && s.people.length ? s.people : null, // null = whole family
       color: hex(s.color)
     };
   });
@@ -61,7 +60,6 @@ export function expand(text, source, from, to) {
       end: allDay ? end.toString() : end.toJSDate().toISOString(),
       loc: (item.location || '').replace(/\s*\n\s*/g, ', ') || undefined,
       notes: (item.description || '').trim().slice(0, 300) || undefined,
-      people: source.people,
       color: source.color,
       cal: source.name
     });
@@ -102,8 +100,8 @@ export async function loadEvents(sources, from, to, fetchFn = fetch) {
 // ---------------------------------------------------------------- Google Calendar API (OAuth)
 // Unlike a secret ICS link this sees every calendar the account can read, shared ones included.
 // Env: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN (from `npm run google-login`);
-// optional GOOGLE_CALENDARS = [{"id":"you@gmail.com","people":["alex"]}, …] to pick calendars and
-// assign them to people (default: every calendar ticked in Google Calendar, shown as family).
+// optional GOOGLE_CALENDARS = [{"id":"you@gmail.com","color":"#2D5BFF"}, …] to pick calendars and
+// set their colour (default: every calendar ticked in Google Calendar).
 const G_API = 'https://www.googleapis.com/calendar/v3';
 let gToken = { value: null, exp: 0 };
 
@@ -147,12 +145,12 @@ export async function googleEvents(env, from, to, fetchFn = fetch) {
   list.forEach((c) => {
     if (picks) {
       const p = picks.find((x) => x.id === c.id || (x.id === 'primary' && c.primary));
-      if (p) chosen.push({ cal: c, people: Array.isArray(p.people) && p.people.length ? p.people : null, color: hex(p.color) });
-    } else if (c.selected) chosen.push({ cal: c, people: null });
+      if (p) chosen.push({ cal: c, color: hex(p.color) });
+    } else if (c.selected) chosen.push({ cal: c });
   });
 
   const out = [], errors = [];
-  await Promise.all(chosen.map(async ({ cal, people, color }) => {
+  await Promise.all(chosen.map(async ({ cal, color }) => {
     try {
       let token;
       for (let page = 0; page < 5; page++) {
@@ -172,7 +170,6 @@ export async function googleEvents(env, from, to, fetchFn = fetch) {
             end: allDay ? e.end.date : new Date(e.end.dateTime).toISOString(),
             loc: (e.location || '').replace(/\s*\n\s*/g, ', ') || undefined,
             notes: (e.description || '').trim().slice(0, 300) || undefined,
-            people,
             color: color || hex(cal.backgroundColor), // default: the colour the calendar has in Google Calendar
             cal: cal.summaryOverride || cal.summary
           });

@@ -1,48 +1,104 @@
-/* Design tokens. Target: Android WebView 106 — no nesting, no color-mix(), no oklch(), no dvh. */
+/* Kitchen Table design tokens (light only). Target: Android WebView 106 — no nesting, no color-mix(), no oklch(), no #rrggbbaa.
+   Fonts are self-hosted (the frame can't load third-party HTTPS assets). */
+@font-face {
+  font-family: 'Ovo'; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(/fonts/ovo-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Figtree'; font-style: normal; font-weight: 300 900; font-display: swap;
+  src: url(/fonts/figtree-latin.woff2) format('woff2');
+}
+
 :root {
-  /* paper + ink */
-  --paper: #F2EEE6;
-  --paper-2: #E8E2D5;
-  --card: #FBF9F4;
-  --ink: #111111;
-  --ink-rgb: 17 17 17;
-  --ink-2: #3B3934;
-  --mute: #7A756B;
-  --line: #D6CFC0;
+  color-scheme: light;
 
-  /* signal colours */
-  --alert: #E5261E;
-  --alert-rgb: 229 38 30;
-  --amber: #FF9500;
-  --amber-rgb: 255 149 0;
-  --ok: #00A36C;
-  --warm: #FFC45C;
-  --warm-rgb: 255 196 92;
-  --night: #D8321F;
+  /* surfaces + lines */
+  --surface-page: #f4f6f9;
+  --surface: #ffffff;
+  --surface-sunken: #eef2f6;
+  --line: #e2e7ee;
+  --line-strong: #7d8899;
 
-  /* person colour defaults (overridden inline per element) */
-  --c: var(--ink);
-  --c-rgb: var(--ink-rgb);
-  --c-ink: #FFFFFF;
+  /* ink */
+  --ink: #1f2933;
+  --ink-muted: #5b6776;
+  --on-member: #1f2933;
+
+  /* action + status */
+  --plum: #6b46c1;
+  --plum-soft: #efe9fb;
+  --on-plum: #ffffff;
+  --focus: #6b46c1;
+  --done: #1f7a6e;
+  --alert: #ad3a0a;
+  --sun: #f2a93b;
+
+  /* members (solid = who, soft = their things) */
+  --member-coral: #fb8072;   --member-coral-soft: #fde4e1;
+  --member-apricot: #fdbf6f; --member-apricot-soft: #fef0dc;
+  --member-sky: #a6cee3;     --member-sky-soft: #e3f0f7;
+  --member-lilac: #cab2d6;   --member-lilac-soft: #efe7f5;
+  --member-sage: #b2df8a;    --member-sage-soft: #e9f5df;
+  --member-blush: #f9b4d4;   --member-blush-soft: #fde7f1;
+
+  /* shared calendars */
+  --calendar-family: #5b9ee8;    --calendar-family-soft: #e2eefb;
+  --calendar-birthdays: #52b04a; --calendar-birthdays-soft: #e3f3e1;
+  --calendar-holidays: #ff7f00;  --calendar-holidays-soft: #ffe9d6;
 
   /* type */
-  --sans: 'Archivo', 'Roboto Condensed', 'Roboto', system-ui, sans-serif;
-  --serif: 'Instrument Serif', 'Noto Serif', Georgia, serif;
-  --fs-clock: 150px;
-  --fs-hero: 76px;
-  --fs-xl: 56px;
-  --fs-l: 34px;
-  --fs-m: 24px;
-  --fs-body: 20px;
-  --fs-label: 15px;
-  --fs-min: 14px;
+  --font-display: Ovo, Georgia, "Times New Roman", serif;
+  --font-sans: Figtree, "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --fs-clock: 64px;   --lh-clock: 68px;
+  --fs-display: 36px; --lh-display: 44px;
+  --fs-day: 28px;     --lh-day: 34px;
+  --fs-title: 22px;   --lh-title: 28px;
+  --fs-event: 17px;   --lh-event: 22px;
+  --fs-body: 17px;    --lh-body: 24px;
+  --fs-meta: 15px;    --lh-meta: 20px;
+  --fs-button: 16px;  --lh-button: 20px;
+  --fs-label: 13px;   --lh-label: 16px;
 
-  /* shape + space */
-  --r: 18px;
-  --r-s: 12px;
-  --gap: 16px;
-  --pad: 24px;
-  --tap: 64px;
-  --ease: cubic-bezier(.2, .8, .2, 1);
-  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  /* spacing */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px;
+
+  /* radius */
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 20px; --radius-pill: 999px;
+
+  /* elevation */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, .06);
+  --shadow-raised: 0 8px 24px rgba(16, 24, 40, .14);
+
+  /* sizes */
+  --touch-min: 48px; --avatar-sm: 24px; --avatar-md: 40px; --fab-size: 64px; --rail-width: 88px;
+
+  /* motion */
+  --ease: ease;
+  --dur: 150ms;
+
+  /* event colour fallback (overridden per element from the member / calendar key) */
+  --c: var(--calendar-family);
+  --c-soft: var(--calendar-family-soft);
+
+  /* ---- legacy names still referenced by view stylesheets; remove as views are converted ---- */
+  --paper: var(--surface-page);
+  --paper-2: var(--surface-sunken);
+  --card: var(--surface);
+  --ink-2: var(--ink-muted);
+  --mute: var(--ink-muted);
+  --ok: var(--done);
+  --amber: var(--sun);
+  --warm: var(--sun);
+  --sans: var(--font-sans);
+  --serif: var(--font-display);
+  --r: var(--radius-lg);
+  --r-s: var(--radius-md);
+  --gap: var(--space-4);
+  --pad: var(--space-6);
+  --tap: var(--touch-min);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
 }

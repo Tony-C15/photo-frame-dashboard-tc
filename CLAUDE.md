@@ -13,6 +13,6 @@
   without my explicit approval.
 - Personal-use fork: only ever open PRs against origin (Tony-C15/photo-frame-dashboard-tc),
   never against wesbos/photo-frame-dashboard. Don't push to upstream.
-- No demo mode. Calendar, thermostat, cameras, speakers and the Baby tab are live-only: when something
+- No demo mode. Calendar, shopping (Todoist project via /api/shopping; needs TODOIST_TOKEN), weather (Open-Meteo via /api/weather, Scarborough), Transit tab (GO trains: timetable built from GTFS by `npm run transit-build` using transit.json; live delays via /api/transit need METROLINX_KEY), thermostat, cameras, speakers and the Baby tab are live-only: when something
   isn't connected the UI says so instead of showing fake data. What's still placeholder data in
-  dashboard/js/data.js: people/ETAs, weather, chores, shopping, lights/locks/garage/scenes, "on this day" photos.
+  dashboard/js/data.js: lights/locks/garage/scenes, "on this day" photos.

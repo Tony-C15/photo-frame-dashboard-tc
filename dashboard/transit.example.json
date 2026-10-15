@@ -1,0 +1,6 @@
+{
+  "stations": [
+    { "code": "UN", "name": "Union", "to": "", "lines": ["LW"] }
+  ],
+  "lines": []
+}

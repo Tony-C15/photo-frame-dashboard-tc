@@ -17,7 +17,6 @@
   App.dayStart = function (d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
   App.addDays = function (d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; };
   App.sameDay = function (a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); };
-  App.isNight = function () { var h = App.now().getHours(); return h >= 22 || h < 6; };
 
   var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -58,54 +57,42 @@
   };
   App.esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
 
-  // ------------------------------------------------------------ icons + people
+  // ------------------------------------------------------------ icons + colours
   App.icon = function (name, size, cls) {
     size = size || 24;
     return '<svg class="i ' + (cls || '') + '" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (window.ICONS[name] || '') + '</svg>';
   };
-  App.person = function (id) {
-    if (id === 'family' || id === 'any') return D.family;
-    for (var i = 0; i < D.people.length; i++) if (D.people[i].id === id) return D.people[i];
-    return D.family;
-  };
+  // Colour = one design-system key (member-* or calendar-*): the solid colour marks who, -soft fills their things.
   App.pstyle = function (p) {
-    if (typeof p === 'string') p = App.person(p);
-    return '--c:' + p.color + ';--c-rgb:' + p.rgb + ';--c-ink:' + p.ink;
-  };
-  App.avatar = function (p, size, cls) {
-    if (typeof p === 'string') p = App.person(p);
-    size = size || 48;
-    return '<span class="avatar ' + (cls || '') + '" style="' + App.pstyle(p) + ';width:' + size + 'px;height:' + size + 'px;font-size:' + Math.round(size * 0.46) + 'px">' + (p.id === 'family' ? '★' : p.name[0]) + '</span>';
-  };
-  App.dots = function (ids, size) {
-    return '<span class="dots">' + ids.map(function (id) { return '<i style="' + App.pstyle(id) + (size ? ';width:' + size + 'px;height:' + size + 'px' : '') + '"></i>'; }).join('') + '</span>';
+    return '--c:var(--' + p.key + ');--c-soft:var(--' + p.key + '-soft)';
   };
 
   // ------------------------------------------------------------ calendar helpers
   App.events = function () {
     return D.events;
   };
-  App.isFamily = function (e) { return e.people.length >= D.people.length; };
-  // Events from a live calendar can carry their own colour (e.color, #rrggbb) so sources are tellable apart.
-  var custom = {};
-  function customColor(hex) {
-    if (!custom[hex]) {
-      var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-      custom[hex] = { id: 'custom', name: '', color: hex, rgb: r + ' ' + g + ' ' + b, ink: (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#111111' : '#FFFFFF' };
+  // An event's colour key comes from the calendar it belongs to (see js/members.js); anything unmatched is 'calendar-family'.
+  var keyCache = {}, seenEvents = null, seenCount = -1;
+  App.evColor = function (e) {
+    var evs = App.events();
+    if (evs !== seenEvents || evs.length !== seenCount) { // calendar list changed: hand out colours again
+      seenEvents = evs; seenCount = evs.length; keyCache = {};
+      window.MEMBERS.assign(evs.map(function (x) { return x.cal || ''; }));
     }
-    return custom[hex];
-  }
-  App.evColor = function (e) { return e.color ? customColor(e.color) : App.isFamily(e) ? D.family : App.person(e.people[0]); };
-  App.timedOn = function (day, pid) {
+    var name = e.cal || '';
+    if (!keyCache[name]) keyCache[name] = { key: window.MEMBERS.keyFor(name) };
+    return keyCache[name];
+  };
+  App.timedOn = function (day) {
     var s = App.dayStart(day), e = App.addDays(s, 1);
     return App.events().filter(function (ev) {
-      return !ev.allDay && ev.start < e && ev.end > s && (!pid || ev.people.indexOf(pid) > -1);
+      return !ev.allDay && ev.start < e && ev.end > s;
     }).sort(function (a, b) { return a.start - b.start || b.end - a.end; });
   };
-  App.allDayOn = function (day, pid) {
+  App.allDayOn = function (day) {
     var s = App.dayStart(day), e = App.addDays(s, 1);
     return App.events().filter(function (ev) {
-      return ev.allDay && ev.start < e && ev.end > s && (!pid || ev.people.indexOf(pid) > -1);
+      return ev.allDay && ev.start < e && ev.end > s;
     });
   };
   App.leaveBy = function (e) { return e.travel ? new Date(+e.start - e.travel * 60000) : e.start; };
@@ -120,39 +107,47 @@
     return App.events().filter(function (e) { return e.id === id; })[0];
   };
 
-  // ------------------------------------------------------------ chores + weather helpers
-  App.currentRoutine = function () {
-    var h = App.now().getHours();
-    for (var i = 0; i < D.routines.length; i++) if (h >= D.routines[i].from && h < D.routines[i].to) return D.routines[i];
-    return D.routines[2];
-  };
+  // ------------------------------------------------------------ weather helpers (live: js/weather.js)
+  // D.weather.hours is a rolling list of hourly forecasts ({ ts, t, p, c, label }) from the server.
+  function wxIndex() {
+    var W = D.weather, now = Date.now() + W.skew, idx = -1;
+    for (var i = 0; i < W.hours.length; i++) if (W.hours[i].ts <= now) idx = i; else break;
+    return idx;
+  }
+  // null until the forecast has loaded (callers show "not connected" instead of numbers)
   App.weatherNow = function () {
-    var W = D.weather, h = App.now().getHours();
-    var rainAt = -1;
-    for (var i = h; i < 24; i++) if (W.p[i] >= 50) { rainAt = i; break; }
+    var W = D.weather, i = wxIndex();
+    if (!W.live || i < 0) return null;
+    var cur = W.hours[i], ahead = W.hours.slice(i, i + 24);
+    var wet = function (x) { return x.p >= 50; };
+    var snow = cur.c === 'snow' || ahead.some(function (x) { return wet(x) && x.c === 'snow'; });
+    var noun = snow ? 'Snow' : 'Rain';
+    var first = -1, k;
+    for (k = 0; k < ahead.length; k++) if (wet(ahead[k])) { first = k; break; }
     var summary, advice;
-    if (rainAt === h) {
-      var stop = h; while (stop < 24 && W.p[stop] >= 50) stop++;
-      summary = 'Rain until ' + App.fmt.hour(new Date(2000, 0, 1, stop));
-      advice = 'Umbrella weather';
-    } else if (rainAt > -1) {
-      summary = 'Rain from ' + App.fmt.hour(new Date(2000, 0, 1, rainAt));
-      var soccer = App.timedOn(App.now()).filter(function (e) { return /soccer/i.test(e.title) && e.start > App.now(); })[0];
-      advice = soccer ? 'Pack a rain jacket for soccer' : 'Grab a rain jacket';
+    if (first === 0) {
+      var stop = 0; while (stop < ahead.length && wet(ahead[stop])) stop++;
+      summary = stop >= ahead.length ? noun + ' all day' : noun + ' until ' + App.fmt.hour(new Date(ahead[stop].ts));
+      advice = snow ? 'Boots and a warm coat' : 'Umbrella weather';
+    } else if (first > 0) {
+      summary = noun + ' from ' + App.fmt.hour(new Date(ahead[first].ts));
+      advice = snow ? 'Snow on the way' : 'Grab a rain jacket';
     } else {
-      summary = W.t[h] < 12 ? 'Clear and cool' : 'Dry all day';
-      advice = W.t[h] < 12 ? 'Jacket weather' : 'Light layers';
+      summary = cur.t < 12 ? 'Dry and cool' : 'Dry all day';
+      advice = cur.t < 0 ? 'Bundle up' : cur.t < 10 ? 'Jacket weather' : cur.t < 20 ? 'Light layers' : 'T-shirt weather';
     }
-    var labels = { sun: 'Sunny', moon: 'Clear', partly: 'Partly cloudy', cloud: 'Overcast', rain: 'Rain' };
-    return { temp: W.t[h], cond: W.c[h], label: labels[W.c[h]], hi: W.hi, lo: W.lo, summary: summary, advice: advice, hour: h };
+    var day = null, now = Date.now() + W.skew;
+    W.days.forEach(function (d) { if (d.ts <= now) day = d; });
+    return { temp: cur.t, cond: cur.c, label: cur.label, hi: day ? day.hi : cur.t, lo: day ? day.lo : cur.t, summary: summary, advice: advice };
   };
-  App.hourly = function (count) {
-    var W = D.weather, h = App.now().getHours(), out = [];
-    for (var i = 0; i < count; i++) {
-      var x = (h + i) % 24;
-      out.push({ h: x, t: W.t[x], c: W.c[x], p: W.p[x], label: i === 0 ? 'Now' : ((x % 12 || 12) + (x >= 12 ? 'p' : 'a')) });
-    }
-    return out;
+  // The next `count` days (today first): [{ label, hi, lo, c, p }]
+  App.daily = function (count) {
+    var W = D.weather, now = Date.now() + W.skew, i = -1;
+    W.days.forEach(function (d, n) { if (d.ts <= now) i = n; });
+    if (i < 0) return [];
+    return W.days.slice(i, i + count).map(function (d, n) {
+      return { label: n === 0 ? 'Today' : App.fmt.dayShort(new Date(d.ts)), hi: d.hi, lo: d.lo, c: d.c, p: d.p };
+    });
   };
 
   // ------------------------------------------------------------ router
@@ -279,7 +274,7 @@
     el.addEventListener('pointercancel', cancel);
   };
 
-  // ------------------------------------------------------------ modes: day / ambient / night
+  // ------------------------------------------------------------ modes: day / ambient
   App.setMode = function (m) {
     var stage = $('#stage');
     App.mode = m;
@@ -293,13 +288,12 @@
   function onIdleTick() {
     idleSec++;
     var blocked = $('#takeover').classList.contains('is-open');
-    if (App.mode === 'nightdash' && idleSec >= 20) { App.setMode('night'); return; }
     if (App.mode !== 'day' || blocked) return;
     if (idleSec === App.idle.home && App.current !== 'home') { App.closeSheet(); App.go('home'); }
     if (idleSec >= App.idle.ambient) {
       App.closeSheet();
       App.go('home');
-      App.setMode(App.isNight() ? 'night' : 'ambient');
+      App.setMode('ambient');
     }
   }
   App.resetIdle = function () { idleSec = 0; };
@@ -336,6 +330,8 @@
       var b = e.target.closest('[data-go]');
       if (b && e.detail === 0) App.go(b.dataset.go);
     });
+    // Sleep: start the photo slideshow right away (a tap wakes it). It never changes the theme.
+    $('#railSleep').addEventListener('click', function () { App.closeSheet(); App.go('home'); App.setMode('ambient'); });
     document.addEventListener('pointerdown', App.resetIdle, true);
     window.addEventListener('hashchange', function () { App.go(location.hash.slice(1)); });
     App.go(location.hash.slice(1) || 'home');

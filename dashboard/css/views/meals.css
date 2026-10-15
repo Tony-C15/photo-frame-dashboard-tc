@@ -1,0 +1,31 @@
+/* Meals */
+.meals { height: 100%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr; gap: 16px 28px; }
+.ml-head { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.ml-head h1 { font-size: 64px; line-height: .95; }
+.ml-sum { font-size: 22px; color: var(--ink-muted); padding-top: 22px; }
+.ml-sum .num { font-size: 34px; color: var(--ink); }
+
+.ml-col { min-height: 0; display: flex; flex-direction: column; }
+.ml-col-h { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.ml-col-h h2 { font-size: 40px; line-height: 1; }
+.ml-col-h .btn { min-height: 56px; padding: 0 22px; }
+.ml-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 40px; }
+.ml-empty { font-size: 40px; line-height: 1.1; color: var(--ink-muted); text-align: center; padding: 70px 0; }
+
+.ml-card { --t: var(--done); display: flex; align-items: center; gap: 16px; padding: 12px 12px 12px 14px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 6px 0 0 var(--t); }
+.ml-card--warn { --t: var(--ink-muted); }
+.ml-card--bad { --t: var(--alert); }
+.ml-day { width: 78px; flex: none; display: flex; flex-direction: column; align-items: center; padding-left: 6px; line-height: 1; }
+.ml-day .num { font-size: 58px; color: var(--t); }
+.ml-day small { font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-top: 2px; }
+.ml-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ml-body b { font-size: 25px; font-weight: 600; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ml-sub { font-size: 16px; color: var(--ink-muted); }
+.ml-done { flex: none; width: 108px; min-height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 14px; background: var(--surface-sunken); font-size: 13px; font-weight: 600; }
+.ml-done:active { background: var(--plum); color: var(--on-plum); transform: scale(.95); }
+
+/* add sheet */
+.ml-input { margin-bottom: 4px; box-shadow: inset 0 0 0 2px var(--line); }
+.ml-lbl { margin: 20px 0 10px; }
+.ml-sheet [data-save].is-disabled { opacity: .35; pointer-events: none; }
+.ml-left { font-size: 14px; font-weight: 600; color: var(--t); }

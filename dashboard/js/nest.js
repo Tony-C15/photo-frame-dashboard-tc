@@ -32,6 +32,7 @@
     c.mode = MODE[t.mode] || 'off'; c.modes = (t.modes || []).map(function (m) { return MODE[m]; });
     c.eco = t.eco; c.hvac = t.hvac; c.heat = t.heatC; c.cool = t.coolC;
     c.set = c.mode === 'cool' ? t.coolC : t.heatC != null ? t.heatC : t.coolC;
+    c.fan = t.fan ? { on: t.fan.on, until: t.fan.until ? Date.parse(t.fan.until) : 0 } : null; // null = no fan wired
   }
 
   N.load = function (fresh) {

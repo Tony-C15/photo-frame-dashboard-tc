@@ -24,7 +24,9 @@ function discover() {
     if (!host) return;
     devices.set(t.id, { id: t.id, name: t.fn || s.name, model: t.md || '', host, port: s.port });
   });
-  browser.on('down', (s) => { const t = s.txt || {}; if (t.id) devices.delete(t.id); });
+  // Speakers say goodbye over mDNS when they sleep or Wi-Fi hiccups. Don't forget them: keep the last known
+  // address (a failed connect then shows "Can't reach"), and ask again every minute to catch new IPs.
+  setInterval(() => { try { browser.update(); } catch { /* ignore */ } }, 60000).unref();
   return firstSeen;
 }
 

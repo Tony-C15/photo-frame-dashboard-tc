@@ -1,7 +1,7 @@
 // iCloud calendars over CalDAV — including calendars other people shared with you, which have no
 // public link. Auth is your Apple ID + an app-specific password (appleid.apple.com > Sign-In and
 // Security). Env: ICLOUD_APPLE_ID, ICLOUD_APP_PASSWORD; optional
-// ICLOUD_CALENDARS = [{"name":"Shared Family","color":"#2D5BFF","people":["jordan"]}] (match by
+// ICLOUD_CALENDARS = [{"name":"Shared Family","color":"#2D5BFF"}] (match by
 // calendar name; default: every event calendar on the account).
 import { XMLParser } from 'fast-xml-parser';
 
@@ -57,8 +57,8 @@ export async function icloudEvents(env, from, to, expand) {
     const name = String(c.prop.displayname || 'iCloud');
     if (picks) {
       const p = picks.find((x) => String(x.name).toLowerCase() === name.toLowerCase());
-      if (p) chosen.push({ href: c.href, name, people: Array.isArray(p.people) && p.people.length ? p.people : null, color: hex(p.color) || hex(c.prop['calendar-color']) });
-    } else chosen.push({ href: c.href, name, people: null, color: hex(c.prop['calendar-color']) });
+      if (p) chosen.push({ href: c.href, name, color: hex(p.color) || hex(c.prop['calendar-color']) });
+    } else chosen.push({ href: c.href, name, color: hex(c.prop['calendar-color']) });
   });
 
   const stamp = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
@@ -67,7 +67,7 @@ export async function icloudEvents(env, from, to, expand) {
   await Promise.all(chosen.map(async (cal, i) => {
     try {
       const rows = props(await dav('REPORT', new URL(cal.href, base).href, query, 1, env, fetch));
-      const source = { id: 'icloud' + i, name: cal.name, people: cal.people, color: cal.color };
+      const source = { id: 'icloud' + i, name: cal.name, color: cal.color };
       rows.forEach((r) => {
         const text = r.prop['calendar-data'];
         if (typeof text === 'string' && text.includes('BEGIN:VEVENT')) events.push(...expand(text, source, from, to));
