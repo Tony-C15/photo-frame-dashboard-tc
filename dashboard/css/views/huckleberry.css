@@ -23,6 +23,7 @@
 .hb-solids { --c: var(--hb-solids); }
 .hb-next { --c: var(--hb-solids); }
 .hb-sleep, .hb-feed, .hb-diaper, .hb-solids { background: var(--c); color: var(--ink); }
+.hb-solids { color: var(--on-plum); }
 .hb-card.is-live { box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--ink); }
 .hb-head { display: flex; align-items: center; gap: 10px; }
 .hb-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--surface); color: var(--ink); flex: none; }
@@ -107,12 +108,13 @@
 .al-facts span { font-size: 14px; color: var(--ink-muted); }
 
 /* solids sits on the Huckleberry green: inner content goes on white */
-.hb-solids .label, .hb-solids .hb-key, .hb-solids .hb-al-group { color: var(--ink); }
-.hb-solids .hb-al-group { border-bottom-color: rgba(31, 41, 51, .25); }
-.hb-solids .hb-meals li, .hb-solids .hb-al { background: var(--surface); }
+.hb-solids .label, .hb-solids .hb-key, .hb-solids .hb-al-group { color: var(--on-plum); }
+.hb-solids .hb-al-group { border-bottom-color: rgba(255, 255, 255, .4); }
+.hb-solids .hb-ic { color: var(--ink); }
+.hb-solids .hb-meals li, .hb-solids .hb-al { background: var(--surface); color: var(--ink); }
 .hb-solids .hb-al--due { background: var(--member-apricot-soft); }
 .hb-solids .hb-al--paused { background: var(--surface-sunken); }
-.hb-solids .hb-meals li.hb-empty { background: none; color: var(--ink); }
-.hb-next .hb-ic { background: var(--c); }
-.hb-next .hb-next-pick { background: var(--c); color: var(--ink); }
+.hb-solids .hb-meals li.hb-empty { background: none; color: var(--on-plum); }
+.hb-next .hb-ic { background: var(--c); color: var(--on-plum); }
+.hb-next .hb-next-pick { background: var(--c); color: var(--on-plum); }
 .hb-next .hb-next-pick small, .hb-next .hb-next-pick p { opacity: 1; }
