@@ -66,7 +66,12 @@
       B.at = at; B.status = 'ready'; B.busy = false; paintBath();
     }).catch(function () { B.status = 'error'; B.busy = false; paintBath(); });
   }
-  function paintBath() { if (V.el && V.el.firstChild) V.el.querySelector('.h-bath').innerHTML = bath(); }
+  // The whole card lights up (soft green) on bath night, i.e. when the bath is due today or overdue.
+  function setBath(el) {
+    el.innerHTML = bath();
+    el.classList.toggle('is-lit', !!el.querySelector('.h-bath-in.is-due, .h-bath-in.is-over'));
+  }
+  function paintBath() { if (V.el && V.el.firstChild) setBath(V.el.querySelector('.h-bath')); }
 
   function hero() {
     var e = App.nextEvent(), now = App.now();
@@ -186,7 +191,7 @@
     var el = V.el;
     el.querySelector('.h-clock').innerHTML = clock();
     el.querySelector('.h-weather').innerHTML = weather();
-    el.querySelector('.h-bath').innerHTML = bath();
+    setBath(el.querySelector('.h-bath'));
     el.querySelector('.h-hero-slot').innerHTML = hero();
     el.querySelector('.h-lanes').innerHTML = lanes();
     el.querySelector('.h-waste').innerHTML = waste();
