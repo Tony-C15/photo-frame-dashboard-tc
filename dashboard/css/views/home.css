@@ -104,6 +104,9 @@
 .h-st-row .h-st-temp { font-family: var(--font-display); font-weight: 400; font-size: 52px; line-height: 56px; }
 .h-st-pills { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .h-st-pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 12px; border-radius: var(--radius-pill); background: var(--surface-sunken); font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 600; }
+.h-status.is-heating { background: var(--member-coral-soft); box-shadow: 0 0 0 2px var(--member-coral), var(--shadow-card); }
+.h-status.is-cooling { background: var(--member-sky-soft); box-shadow: 0 0 0 2px var(--member-sky), var(--shadow-card); }
+.h-status.is-heating .h-st-pill, .h-status.is-cooling .h-st-pill { background: var(--surface); }
 .h-st-pill.is-heat { background: var(--member-coral-soft); }
 .h-st-pill.is-cool { background: var(--member-sky-soft); }
 .h-st-pill.is-fan { background: var(--member-sage-soft); }

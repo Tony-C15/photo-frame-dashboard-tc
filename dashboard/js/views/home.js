@@ -209,7 +209,11 @@
     el.querySelector('.h-lanes').innerHTML = lanes();
     el.querySelector('.h-waste').innerHTML = waste();
     el.querySelector('.h-shop').innerHTML = shopping();
-    el.querySelector('.h-status').innerHTML = status();
+    var st = el.querySelector('.h-status');
+    st.innerHTML = status();
+    // The whole card takes the colour of what the thermostat is doing, so heating / cooling reads from across the room.
+    st.classList.toggle('is-heating', !!st.querySelector('.h-st-pill.is-heat'));
+    st.classList.toggle('is-cooling', !!st.querySelector('.h-st-pill.is-cool'));
   }
 
   App.register('home', {
