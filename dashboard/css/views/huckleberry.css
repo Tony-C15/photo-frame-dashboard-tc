@@ -38,10 +38,10 @@
 .hb-big .num { font-size: inherit; }
 .hb-sub { font-size: 17px; font-weight: 600; color: var(--ink-muted); line-height: 21px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: var(--fs-meta); }
 .is-live .hb-sub { color: inherit; opacity: .85; }
-.hb-foot { margin-top: auto; display: flex; gap: var(--space-4); padding-top: 10px; border-top: 1px solid var(--line); }
+.hb-foot { margin-top: auto; display: flex; gap: var(--space-3); padding-top: 10px; border-top: 1px solid var(--line); }
 .is-live .hb-foot { border-top-color: var(--line); }
 .hb-foot > div { display: flex; flex-direction: column; }
-.hb-foot .num { font-size: 26px; line-height: 32px; }
+.hb-foot .num { font-size: 24px; line-height: 32px; }
 .hb-foot small { font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-top: 3px; white-space: nowrap; }
 .is-live .hb-foot small { color: inherit; opacity: .75; }
 
@@ -114,4 +114,5 @@
 .hb-al { min-height: 0; justify-content: flex-start; }
 .hb-al > * { flex: none; }
 
-.hb-foot .hb-none { font-size: var(--fs-body); line-height: 32px; font-weight: 600; }
+.hb-foot > div { white-space: nowrap; flex: none; }
+.hb-foot .hb-none { font-size: var(--fs-meta); line-height: 32px; font-weight: 600; }
