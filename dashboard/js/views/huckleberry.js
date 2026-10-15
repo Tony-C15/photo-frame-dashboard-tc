@@ -311,7 +311,7 @@
         '<div><small>All time</small><b>' + x.total + ' meal' + (x.total === 1 ? '' : 's') + '</b><span>first ' + date(x.first) + '</span></div></div>';
     App.sheet('<div class="sheet-pad"><div class="label">Allergen' + (x.paused ? ' · paused' : '') + '</div><h2 class="serif sheet-h">' + esc(x.a.label) + '</h2>' + rows +
       '<p class="sheet-p">' + (x.paused ? 'Paused allergens aren’t flagged as overdue and won’t be suggested.' : 'Pausing stops it being flagged as overdue and from being suggested next.') + '</p>' +
-      '<div class="sheet-actions"><button class="btn ' + (x.paused ? 'btn--solid' : 'btn--ghost') + '" data-alpause>' + (x.paused ? 'Resume ' : 'Pause ') + esc(x.a.label) + '</button></div></div>', {
+      '<div class="sheet-actions"><button class="btn ' + (x.paused ? 'btn--solid' : '') + '" data-alpause>' + (x.paused ? 'Resume ' : 'Pause ') + esc(x.a.label) + '</button></div></div>', {
       onMount: function (sheet, close) {
         sheet.querySelector('[data-alpause]').addEventListener('click', function () { setPaused(k, !x.paused); close(); render(); });
       }
