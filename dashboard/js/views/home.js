@@ -36,7 +36,7 @@
     return Math.max(0, Math.round((App.dayStart(now) - App.dayStart(new Date(B.at * 1000))) / 864e5));
   }
   function bath() {
-    var head = '<div class="h-bath-h"><span class="label">Bath night</span>' + App.icon('bath', 40) + '</div>';
+    var head = '<div class="h-bath-h"><span class="label">Bath night</span>' + App.icon('bath', 52) + '</div>';
     if (!window.Huck || !window.Huck.signedIn()) return head + '<p class="h-w-note">Huckleberry isn’t connected</p>';
     if (B.status === 'error' && B.at == null) return head + '<p class="h-w-note">Can’t reach Huckleberry</p>';
     if (B.status !== 'ready') return head + '<p class="h-w-note">Loading…</p>';
