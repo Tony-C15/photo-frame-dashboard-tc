@@ -72,10 +72,15 @@
     return D.events;
   };
   // An event's colour key comes from the calendar it belongs to (see js/members.js); anything unmatched is 'calendar-family'.
-  var keyCache = {};
+  var keyCache = {}, seenEvents = null, seenCount = -1;
   App.evColor = function (e) {
+    var evs = App.events();
+    if (evs !== seenEvents || evs.length !== seenCount) { // calendar list changed: hand out colours again
+      seenEvents = evs; seenCount = evs.length; keyCache = {};
+      window.MEMBERS.assign(evs.map(function (x) { return x.cal || ''; }));
+    }
     var name = e.cal || '';
-    if (!keyCache[name]) keyCache[name] = { key: (window.MEMBERS || { keyFor: function () { return 'calendar-family'; } }).keyFor(name) };
+    if (!keyCache[name]) keyCache[name] = { key: window.MEMBERS.keyFor(name) };
     return keyCache[name];
   };
   App.timedOn = function (day) {
