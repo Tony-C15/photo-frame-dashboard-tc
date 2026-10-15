@@ -3,7 +3,7 @@
   height: 100%;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: 184px 1fr;
+  grid-template-rows: 212px 1fr;
   gap: var(--space-4);
 }
 
@@ -15,10 +15,10 @@
 .h-date b { font-weight: 400; margin-right: 6px; }
 
 /* ---- weather (WeatherChip + forecast) */
-.h-weather { grid-column: 5 / 10; padding: var(--space-3) var(--space-4); background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); display: flex; flex-direction: column; justify-content: flex-end; }
+.h-weather { grid-column: 5 / 10; min-height: 0; overflow: hidden; padding: var(--space-3) var(--space-4); background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); display: flex; flex-direction: column; justify-content: flex-end; }
 .h-wx-top { display: flex; align-items: center; gap: var(--space-3); }
 .h-wx-icon { color: var(--ink); }
-.h-wx-temp { font-family: var(--font-display); font-weight: 400; font-size: var(--fs-clock); line-height: var(--lh-clock); }
+.h-wx-temp { font-family: var(--font-display); font-weight: 400; font-size: 52px; line-height: 56px; }
 .h-wx-meta { display: flex; flex-direction: column; font-size: var(--fs-meta); margin-left: var(--space-1); }
 .h-wx-meta b { font-weight: 600; font-size: var(--fs-body); }
 .h-wx-meta span { color: var(--ink-muted); font-variant-numeric: tabular-nums; white-space: pre; }
@@ -55,7 +55,7 @@
   overflow: hidden; position: relative;
 }
 .h-hero-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.h-hero-title { font-family: var(--font-display); font-weight: 400; font-size: 52px; line-height: 56px; margin: var(--space-2) 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h-hero-title { font-family: var(--font-display); font-weight: 400; font-size: 52px; line-height: 64px; margin: var(--space-2) 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .h-hero-meta { font-size: var(--fs-body); color: var(--ink-muted); }
 .h-hero-foot { margin-top: auto; display: flex; align-items: center; gap: var(--space-3); }
 .h-hero-count { font-family: var(--font-display); font-size: 120px; line-height: 1; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
@@ -80,7 +80,7 @@
 .h-more { min-height: var(--touch-min); align-self: center; font-size: var(--fs-button); font-weight: 600; color: var(--plum); text-align: left; padding: 0 var(--space-3); }
 
 /* ---- side column */
-.h-side { grid-column: 8 / 13; display: grid; grid-template-rows: 232px 150px; align-content: start; gap: var(--space-4); min-height: 0; }
+.h-side { grid-column: 8 / 13; display: grid; grid-template-rows: 232px 168px; align-content: start; gap: var(--space-4); min-height: 0; }
 
 .h-duo { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 .h-shop, .h-status { display: flex; flex-direction: column; gap: var(--space-1); }
