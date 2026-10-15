@@ -187,11 +187,17 @@
       }).join('') + '</ul>';
   }
 
+  // Thermostat card: the temperature is the point; below it, what the thermostat is doing (no "inside").
   function status() {
     var c = D.climate;
-    return '<div class="label">Home</div>' + (c.live
-      ? '<div class="h-st-row">' + App.icon('thermo', 24) + '<b class="num">' + App.deg(c.current) + '°</b><span>inside' + (c.mode !== 'off' && !c.eco ? ' · ' + (c.hvac === 'HEATING' ? 'heating' : c.hvac === 'COOLING' ? 'cooling' : 'holding') : '') + '</span></div>'
-      : '<div class="h-st-row is-muted"><span>Thermostat not connected</span></div>');
+    if (!c.live) return '<div class="label">Home</div><div class="h-st-row is-muted"><span>Thermostat not connected</span></div>';
+    var state = c.mode === 'off' ? ['Off', ''] : c.eco ? ['Eco', ''] :
+      c.hvac === 'HEATING' ? ['Heating', ' is-heat'] : c.hvac === 'COOLING' ? ['Cooling', ' is-cool'] : ['Holding', ''];
+    var pills = '<span class="h-st-pill' + state[1] + '">' + state[0] + '</span>' +
+      (c.fan && c.fan.on ? '<span class="h-st-pill is-fan">' + App.icon('fan', 16) + 'Fan on</span>' : '');
+    return '<div class="label">Home</div>' +
+      '<div class="h-st-row">' + App.icon('thermo', 32) + '<b class="h-st-temp">' + App.deg(c.current) + '°</b></div>' +
+      '<div class="h-st-pills">' + pills + '</div>';
   }
 
   function paint() {
