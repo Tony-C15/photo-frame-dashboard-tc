@@ -107,3 +107,8 @@
 .al-facts small { font-size: 13px; font-weight: 600; color: var(--ink-muted); }
 .al-facts b { font-size: 26px; font-weight: 600; line-height: 1.1; }
 .al-facts span { font-size: 14px; color: var(--ink-muted); }
+
+/* allergen tiles: rows size to their content, and the lines inside never shrink (they have overflow hidden, so flex would squash them) */
+.hb-allergens { grid-auto-rows: max-content; }
+.hb-al { min-height: 0; justify-content: flex-start; }
+.hb-al > * { flex: none; }
