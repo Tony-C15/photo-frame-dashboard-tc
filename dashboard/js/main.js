@@ -1,15 +1,17 @@
 // Entry point. Order matters: each module attaches to the shared window.App.
 import './icons.js';
 import './data.js';
+import './members.js';
 import './app.js';
 import './system.js';
 import './calendar-source.js';
 import './nest.js';
+import './weather.js';
 import './slideshow.js';
 import './views/home.js';
 import './views/calendar.js';
-import './views/tasks.js';
 import './views/shopping.js';
+import './views/meals.js';
 import './views/control.js';
 import './huckleberry.js';
 import './views/huckleberry.js';
