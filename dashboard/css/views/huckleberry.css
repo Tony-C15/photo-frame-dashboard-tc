@@ -113,3 +113,5 @@
 .hb-allergens { grid-auto-rows: max-content; }
 .hb-al { min-height: 0; justify-content: flex-start; }
 .hb-al > * { flex: none; }
+
+.hb-foot .hb-none { font-size: var(--fs-body); line-height: 32px; font-weight: 600; }

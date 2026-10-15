@@ -62,18 +62,45 @@
     return '';
   }
 
+  // "19:00", "7:00 PM", hours (19), minutes (1140) or seconds (68400) since midnight -> minutes since midnight
+  function minutesOfDay(v, dflt) {
+    if (v == null || v === '') return dflt;
+    if (typeof v === 'string') {
+      var m = v.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap]m)?$/i);
+      if (m) {
+        var h = +m[1] % 24;
+        if (m[3]) h = (+m[1] % 12) + (/p/i.test(m[3]) ? 12 : 0);
+        return h * 60 + +m[2];
+      }
+      v = parseFloat(v);
+    }
+    if (typeof v !== 'number' || isNaN(v) || v < 0) return dflt;
+    if (v <= 24) return Math.round(v * 60);
+    if (v <= 1440) return Math.round(v);
+    if (v <= 86400) return Math.round(v / 60);
+    return dflt;
+  }
+  function dayWindow() {
+    var k = V.kids.filter(function (x) { return x.cid === V.cid; })[0] || {};
+    var start = minutesOfDay(k.morningCutoff, 6 * 60), night = minutesOfDay(k.nightStart, 19 * 60);
+    return night > start ? { start: start, night: night } : { start: 6 * 60, night: 19 * 60 };
+  }
+
   function sleepModel() {
     var L = V.live.sleep, t = pick(L, ['timer']), last = pick(L, ['prefs', 'lastSleep']);
     var total = today(V.hist && V.hist.sleep).reduce(function (s, e) { return s + (e.duration || 0); }, 0);
-    // Huckleberry doesn't tag naps vs night sleep here, so a nap = sleep that starts between 6 AM and 7 PM.
-    function isNap(startSec) { var h = new Date(startSec * 1000).getHours(); return h >= 6 && h < 19; }
-    var nap = today(V.hist && V.hist.sleep).reduce(function (s, e) { return s + (isNap(e.start) ? (e.duration || 0) : 0); }, 0);
-    var m = { total: total, nap: nap };
+    // Naps are sleeps that start inside the day window the family set in Huckleberry (day starts at the child's
+    // morningCutoff, night starts at nightStart). Huckleberry doesn't tag them for us.
+    var win = dayWindow();
+    function isNap(startSec) { var d = new Date(startSec * 1000), mm = d.getHours() * 60 + d.getMinutes(); return mm >= win.start && mm < win.night; }
+    var naps = today(V.hist && V.hist.sleep).filter(function (e) { return isNap(e.start); });
+    var nap = naps.reduce(function (s, e) { return s + (e.duration || 0); }, 0);
+    var m = { total: total, nap: nap, napCount: naps.length };
     if (t && t.active && t.timerStartTime) {
       m.on = true; m.paused = !!t.paused; m.t0 = t.timerStartTime / 1000;
       m.fixed = t.paused && t.timerEndTime ? (t.timerEndTime - t.timerStartTime) / 1000 : 0;
       m.total += m.paused ? m.fixed : nowS() - m.t0;
-      if (isNap(m.t0)) m.nap += m.paused ? m.fixed : nowS() - m.t0;
+      if (isNap(m.t0)) { m.nap += m.paused ? m.fixed : nowS() - m.t0; m.napCount++; }
     }
     if (last && last.start != null) { m.lastStart = last.start; m.lastDur = last.duration || 0; m.wokeAt = last.start + (last.duration || 0); }
     return m;
@@ -220,7 +247,7 @@
     } else { main = '<span class="num">—</span>'; sub = 'No sleep logged yet'; }
     return card('hb-sleep', '#2D5BFF', '45 91 255', '#FFFFFF',
       head('moon', 'Sleep', badge) + '<div class="hb-big">' + main + '</div><p class="hb-sub">' + sub + '</p>' +
-      '<footer class="hb-foot">' + stat(dur(m.total), 'slept today') + stat(dur(m.nap), 'naps today') + '</footer>', m.on);
+      '<footer class="hb-foot">' + stat(dur(m.total), 'slept today') + (m.napCount ? stat(dur(Math.max(m.nap, 60)), 'naps today') : '<div><span class="num hb-none">No naps today</span></div>') + '</footer>', m.on);
   }
   function feedCard() {
     var m = feedModel(), main, sub, badge = '';
