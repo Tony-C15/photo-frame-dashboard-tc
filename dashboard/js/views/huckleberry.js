@@ -338,7 +338,6 @@
     var rest = n.never.filter(function (x) { return x !== p; });
     if (rest.length) body += '<div class="label">Not introduced yet</div><p class="hb-never">' + rest.map(function (x) { return esc(x.a.label); }).join(', ') + '</p>';
     if (n.paused.length) body += '<div class="label">Paused · not suggested</div><p class="hb-never">' + n.paused.map(function (x) { return esc(x.a.label); }).join(', ') + '</p>';
-    body += '<p class="hb-note">One new allergen at a time — check with your pediatrician.</p>';
     return card('hb-next', '#00A36C', '0 163 108', '#FFFFFF', head('star', 'Next allergen') + '<div class="hb-next-body">' + body + '</div>', false);
   }
 
