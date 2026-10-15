@@ -1,5 +1,4 @@
-// Placeholder data for the parts of the dashboard that are not connected to anything yet (shopping,
-// photos). Calendar, thermostat, cameras, speakers, plugs and weather are live-only: see
+// Placeholder data for the parts of the dashboard that are not connected to anything yet (photos). Calendar, thermostat, cameras, speakers, plugs and weather are live-only: see
 // js/calendar-source.js, js/nest.js, js/weather.js and the Home view.
 window.DATA = (function () {
   var base = new Date();
@@ -11,42 +10,16 @@ window.DATA = (function () {
   var events = []; // filled from the live calendar (js/calendar-source.js); never demo events
 
   // ---------------------------------------------------------------- shopping
-  var stores = [{ id: 'grocer', name: 'FreshCo' }, { id: 'costco', name: 'Costco' }];
+  // Stores an item can be tagged with (Store chip on each row). Add a store here; its id is the Todoist label name.
+  var stores = [{ id: 'walmart', name: 'Walmart' }, { id: 'costco', name: 'Costco' }, { id: 'chinese', name: 'Chinese' }];
   var catOrder = {
     all: ['Produce', 'Bakery', 'Meat & Fish', 'Dairy & Eggs', 'Pantry', 'Frozen', 'Snacks', 'Household'],
-    grocer: ['Produce', 'Bakery', 'Meat & Fish', 'Dairy & Eggs', 'Pantry', 'Frozen', 'Snacks', 'Household'],
+    walmart: ['Produce', 'Bakery', 'Meat & Fish', 'Dairy & Eggs', 'Pantry', 'Frozen', 'Snacks', 'Household'],
+    chinese: ['Produce', 'Meat & Fish', 'Pantry', 'Frozen', 'Snacks', 'Dairy & Eggs', 'Bakery', 'Household'],
     costco: ['Household', 'Pantry', 'Snacks', 'Dairy & Eggs', 'Meat & Fish', 'Frozen', 'Produce', 'Bakery']
   };
-  var gid = 0;
-  function g(name, cat, qty, store, done, note) {
-    return { id: 'g' + (++gid), name: name, cat: cat, qty: qty, store: store, done: !!done, note: note || '' };
-  }
-  var groceries = [
-    g('Bananas', 'Produce', 1, 'grocer', false, 'Bunch, not too ripe'),
-    g('Baby spinach', 'Produce', 1, 'grocer'),
-    g('Avocados', 'Produce', 3, 'grocer'),
-    g('Honeycrisp apples', 'Produce', 6, 'grocer'),
-    g('Sourdough loaf', 'Bakery', 1, 'grocer'),
-    g('Bagels', 'Bakery', 2, 'costco', false, 'Everything'),
-    g('Chicken thighs', 'Meat & Fish', 1, 'grocer', false, 'Boneless'),
-    g('Salmon fillets', 'Meat & Fish', 2, 'grocer'),
-    g('Milk 2%', 'Dairy & Eggs', 2, 'costco'),
-    g('Eggs', 'Dairy & Eggs', 1, 'costco', false, '2 dozen'),
-    g('Greek yogurt', 'Dairy & Eggs', 1, 'grocer'),
-    g('Aged cheddar', 'Dairy & Eggs', 1, 'grocer'),
-    g('Rigatoni', 'Pantry', 2, 'grocer'),
-    g('Olive oil', 'Pantry', 1, 'costco'),
-    g('Coffee beans', 'Pantry', 1, 'grocer', false, 'Dark roast'),
-    g('Frozen peas', 'Frozen', 1, 'grocer'),
-    g('Waffles', 'Frozen', 1, 'grocer'),
-    g('Goldfish crackers', 'Snacks', 1, 'costco'),
-    g('Granola bars', 'Snacks', 1, 'grocer'),
-    g('Paper towels', 'Household', 1, 'costco'),
-    g('Dish soap', 'Household', 1, 'grocer'),
-    g('Lemons', 'Produce', 2, 'grocer', true),
-    g('Butter', 'Dairy & Eggs', 1, 'grocer', true),
-    g('Tortillas', 'Bakery', 1, 'grocer', true)
-  ];
+  var groceries = []; // filled live from Todoist (js/shopping-source.js); never demo items
+  var shop = { live: false, off: false, error: '', project: '' };
   var catalog = [
     ['Apples', 'Produce'], ['Avocados', 'Produce'], ['Bananas', 'Produce'], ['Baby spinach', 'Produce'], ['Blueberries', 'Produce'],
     ['Broccoli', 'Produce'], ['Carrots', 'Produce'], ['Cucumber', 'Produce'], ['Garlic', 'Produce'], ['Grapes', 'Produce'],
@@ -55,7 +28,7 @@ window.DATA = (function () {
     ['Tortillas', 'Bakery'], ['Hamburger buns', 'Bakery'], ['Bacon', 'Meat & Fish'], ['Chicken breasts', 'Meat & Fish'],
     ['Chicken thighs', 'Meat & Fish'], ['Ground beef', 'Meat & Fish'], ['Salmon fillets', 'Meat & Fish'], ['Shrimp', 'Meat & Fish'],
     ['Butter', 'Dairy & Eggs'], ['Cheddar', 'Dairy & Eggs'], ['Cream cheese', 'Dairy & Eggs'], ['Eggs', 'Dairy & Eggs'],
-    ['Greek yogurt', 'Dairy & Eggs'], ['Milk 2%', 'Dairy & Eggs'], ['Oat milk', 'Dairy & Eggs'], ['Parmesan', 'Dairy & Eggs'],
+    ['Greek yogurt', 'Dairy & Eggs'], ['Skim milk', 'Dairy & Eggs'], ['Oat milk', 'Dairy & Eggs'], ['Parmesan', 'Dairy & Eggs'],
     ['Black beans', 'Pantry'], ['Cereal', 'Pantry'], ['Coffee beans', 'Pantry'], ['Flour', 'Pantry'], ['Honey', 'Pantry'],
     ['Maple syrup', 'Pantry'], ['Olive oil', 'Pantry'], ['Pasta sauce', 'Pantry'], ['Peanut butter', 'Pantry'], ['Rice', 'Pantry'],
     ['Rigatoni', 'Pantry'], ['Spaghetti', 'Pantry'], ['Sugar', 'Pantry'], ['Tea', 'Pantry'], ['Frozen peas', 'Frozen'],
@@ -64,7 +37,9 @@ window.DATA = (function () {
     ['Popcorn', 'Snacks'], ['Dish soap', 'Household'], ['Dishwasher pods', 'Household'], ['Garbage bags', 'Household'],
     ['Laundry detergent', 'Household'], ['Paper towels', 'Household'], ['Toilet paper', 'Household'], ['Toothpaste', 'Household']
   ];
-  var usuals = ['Milk 2%', 'Eggs', 'Bananas', 'Bread', 'Apples', 'Coffee beans', 'Greek yogurt', 'Cheddar', 'Butter', 'Baby spinach', 'Chicken thighs', 'Paper towels'];
+  // Pinned usuals (always shown). The "Often bought" tiles under them are learned from Todoist's completed items.
+  var oftenHide = ['milk 2%']; // names to keep out of "Often bought" (e.g. test items in Todoist's history)
+  var usuals = ['Skim milk', 'Eggs', 'Bananas', 'Bread', 'Apples', 'Coffee beans', 'Greek yogurt', 'Cheddar', 'Butter', 'Baby spinach', 'Chicken thighs', 'Paper towels'];
 
   // ---------------------------------------------------------------- thermostat
   var climate = { live: false }; // filled from the thermostat (js/nest.js)
@@ -101,9 +76,8 @@ window.DATA = (function () {
   return {
     accent: accent,
     events: events,
-    stores: stores, catOrder: catOrder, groceries: groceries, catalog: catalog, usuals: usuals,
+    stores: stores, catOrder: catOrder, groceries: groceries, shop: shop, catalog: catalog, usuals: usuals, oftenHide: oftenHide,
     climate: climate,
-    weather: weather, photos: photos,
-    _gid: function () { return 'g' + (++gid); }
+    weather: weather, photos: photos
   };
 })();

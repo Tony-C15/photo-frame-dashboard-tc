@@ -6,15 +6,9 @@
 
   function open() { return D.groceries.filter(function (g) { return !g.done && (V.store === 'all' || g.store === V.store); }); }
   function done() { return D.groceries.filter(function (g) { return g.done && (V.store === 'all' || g.store === V.store); }); }
-  function storeName(id) { return D.stores.filter(function (s) { return s.id === id; })[0].name; }
+  function storeName(id) { var s = D.stores.filter(function (s) { return s.id === id; })[0]; return s ? s.name : id; }
 
-  function categorize(name) {
-    var n = name.toLowerCase();
-    var hit = D.catalog.filter(function (c) { return c[0].toLowerCase() === n; })[0] ||
-      D.catalog.filter(function (c) { var a = c[0].toLowerCase(); return a.indexOf(n) > -1 || n.indexOf(a) > -1; })[0] ||
-      D.catalog.filter(function (c) { return n.split(/\s+/).some(function (w) { return w.length > 3 && c[0].toLowerCase().indexOf(w) > -1; }); })[0];
-    return hit ? hit[1] : 'Other';
-  }
+  function categorize(name) { return Shop.categorize(name); }
   function find(name, isDone) {
     return D.groceries.filter(function (g) { return !!g.done === isDone && g.name.toLowerCase() === name.toLowerCase(); })[0];
   }
@@ -24,16 +18,17 @@
       '<button class="s-hit" data-check="' + g.id + '">' +
       '<span class="s-box">' + App.icon('check', 22) + '</span>' +
       '<span class="s-name"><b>' + App.esc(g.name) + '</b>' + (g.note ? '<small>' + App.esc(g.note) + '</small>' : '') + '</span>' +
-      (V.store === 'all' && g.store === 'costco' ? '<span class="s-store">Costco</span>' : '') +
       '</button>' +
-      '<div class="s-qty"><button data-qty="-1" data-id="' + g.id + '" aria-label="Less">' + App.icon('minus', 22) + '</button><span class="num">' + g.qty + '</span><button data-qty="1" data-id="' + g.id + '" aria-label="More">' + App.icon('plus', 22) + '</button></div>' +
+      '<button class="s-chip' + (g.store ? ' is-set' : '') + '" data-store-pick="' + g.id + '">' + (g.store ? storeName(g.store) : App.icon('plus', 16) + 'Store') + '</button>' +
+      '<div class="s-qty"><button data-qty="-1" data-id="' + g.id + '" aria-label="' + (g.qty > 1 ? 'Less' : 'Remove') + '">' + App.icon(g.qty > 1 ? 'minus' : 'trash', 22) + '</button><span class="num">' + g.qty + '</span><button data-qty="1" data-id="' + g.id + '" aria-label="More">' + App.icon('plus', 22) + '</button></div>' +
       '</div>';
   }
 
   function listHTML() {
-    var items = open(), order = D.catOrder[V.store].concat(['Other']);
+    var items = open(), order = (D.catOrder[V.store] || D.catOrder.all).concat(['Other']);
     var groups = order.map(function (cat) { return { cat: cat, items: items.filter(function (g) { return g.cat === cat; }) }; }).filter(function (x) { return x.items.length; });
     var d = done();
+    if (!D.shop.live && !items.length && !d.length) return '<div class="s-empty serif">' + (D.shop.off ? 'Shopping list not connected.<br><i>Add TODOIST_TOKEN to the server.</i>' : D.shop.error ? 'Can’t reach the list.<br><i>' + App.esc(D.shop.error) + '</i>' : 'Loading the list…') + '</div>';
     return (items.length ? groups.map(function (gr) {
       return '<div class="s-cat" data-cat="' + gr.cat + '"><div class="s-cat-h"><span class="label">' + gr.cat + '</span><span class="label" data-cat-count>' + gr.items.length + '</span></div>' + gr.items.map(row).join('') + '</div>';
     }).join('') : '<div class="s-empty serif">All stocked up.<br><i>Nothing left to buy.</i></div>') +
@@ -56,7 +51,10 @@
         return '<button class="s-ac-row" data-add="' + App.esc(m[0]) + '"><b>' + App.esc(m[0]) + '</b><span class="label">' + (on ? 'On list · ×' + on.qty : m[1]) + '</span>' + App.icon('plus', 26) + '</button>';
       }).join('') + (exact ? '' : '<button class="s-ac-row s-ac-row--new" data-add="' + App.esc(V.query.trim()) + '"><b>Add “' + App.esc(V.query.trim()) + '”</b><span class="label">' + categorize(V.query) + '</span>' + App.icon('plus', 26) + '</button>') + '</div>';
     }
-    return '<div class="label">Usuals · tap to add</div><div class="s-usuals">' + D.usuals.map(usualTile).join('') + '</div>';
+    var pinned = D.usuals.map(function (n) { return n.toLowerCase(); });
+    var often = D.shop.often.filter(function (n) { return pinned.indexOf(n.toLowerCase()) < 0; }).slice(0, 6);
+    return '<div class="label">Usuals · tap to add</div><div class="s-usuals">' + D.usuals.map(usualTile).join('') + '</div>' +
+      (often.length ? '<div class="label">Often bought</div><div class="s-usuals s-usuals--often">' + often.map(usualTile).join('') + '</div>' : '');
   }
   function usualTile(name) {
     var on = find(name, false);
@@ -139,20 +137,25 @@
 
   function add(name) {
     name = name.trim();
+    if (!D.shop.live) return App.toast('The shopping list isn’t connected', { icon: 'cart', tone: 'error', ms: 3000 });
     var g = find(name, false), msg;
     if (g) {
       g.qty++;
       msg = 'Already on the list · now <b>×' + g.qty + '</b> ' + App.esc(g.name);
+      Shop.set(g, { qty: g.qty });
       var q = V.el.querySelector('.s-list [data-id="' + g.id + '"] .s-qty .num');
       if (q) q.textContent = g.qty;
     } else if ((g = find(name, true))) {
       g.done = false; g.qty = 1;
+      Shop.set(g, { done: false }); Shop.set(g, { qty: 1 });
       msg = 'Added back <b>' + App.esc(g.name) + '</b>';
       paintList();
     } else {
       var cat = D.catalog.filter(function (c) { return c[0].toLowerCase() === name.toLowerCase(); })[0];
-      g = { id: D._gid(), name: cat ? cat[0] : name.charAt(0).toUpperCase() + name.slice(1), cat: categorize(name), qty: 1, store: V.store === 'all' ? 'grocer' : V.store, done: false, note: '' };
+      g = { id: Shop.tmpId(), name: cat ? cat[0] : name.charAt(0).toUpperCase() + name.slice(1), cat: categorize(name), qty: 1, store: V.store === 'all' ? '' : V.store, // no guessing: tag it after adding (the Store chip)
+        labels: null, done: false, note: '' };
       D.groceries.push(g);
+      Shop.add(g);
       msg = 'Added <b>' + App.esc(g.name) + '</b> to ' + g.cat;
       insertRow(g);
     }
@@ -174,6 +177,7 @@
       if (!V.pending[g.id]) return;
       delete V.pending[g.id];
       g.done = true;
+      Shop.set(g, { done: true });
       removeRow(g);
       refreshSuggestFor(g);
       App.emit('data');
@@ -184,9 +188,49 @@
         var wasDone = g.done;
         delete V.pending[g.id];
         g.done = false;
-        if (wasDone) paintList();
+        if (wasDone) { Shop.set(g, { done: false }); paintList(); }
         else { var r = V.el.querySelector('.s-list [data-id="' + g.id + '"]'); if (r) r.classList.remove('is-checking'); }
         refreshSuggestFor(g);
+        App.emit('data');
+      }
+    });
+  }
+
+  function pickStore(id) {
+    var g = D.groceries.filter(function (x) { return x.id === id; })[0];
+    if (!g) return;
+    App.sheet('<div class="sheet-pad"><div class="sheet-h">Where to buy ' + App.esc(g.name) + '?</div>' +
+      '<div class="s-pick">' + D.stores.map(function (s) {
+        return '<button class="btn' + (g.store === s.id ? ' btn--solid' : '') + '" data-pick="' + s.id + '">' + App.esc(s.name) + '</button>';
+      }).join('') + '<button class="btn btn--ghost" data-pick="">No store</button></div></div>', {
+      onMount: function (sheet, close) {
+        sheet.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-pick]');
+          if (!b) return;
+          g.store = b.dataset.pick;
+          Shop.set(g, { store: g.store });
+          close();
+          paintList();
+        });
+      }
+    });
+  }
+
+  // Take an item off the list without checking it off (it is deleted in Todoist after the Undo window).
+  function removeItem(g) {
+    D.groceries = D.groceries.filter(function (x) { return x !== g; });
+    delete V.pending[g.id];
+    var r = V.el.querySelector('.s-list [data-id="' + g.id + '"]');
+    if (r && open().length) { r.parentNode.removeChild(r); catCount(g.cat); paintHead(); } else paintList();
+    refreshSuggestFor(g);
+    Shop.remove(g);
+    App.emit('data');
+    App.toast('Removed <b>' + App.esc(g.name) + '</b>', {
+      icon: 'trash', ms: 4000,
+      undo: function () {
+        Shop.unremove(g);
+        D.groceries.push(g);
+        paintList(); refreshSuggestFor(g);
         App.emit('data');
       }
     });
@@ -202,17 +246,23 @@
     }
     if ((t = e.target.closest('[data-qty]'))) {
       var q = D.groceries.filter(function (x) { return x.id === t.dataset.id; })[0];
-      q.qty = Math.max(1, q.qty + +t.dataset.qty);
+      if (q.qty === 1 && +t.dataset.qty < 0) return removeItem(q); // minus at 1 = remove from the list
+      q.qty = q.qty + +t.dataset.qty;
       t.parentNode.querySelector('.num').textContent = q.qty;
+      var less = t.parentNode.querySelector('[data-qty="-1"]');
+      less.innerHTML = App.icon(q.qty > 1 ? 'minus' : 'trash', 22);
+      less.setAttribute('aria-label', q.qty > 1 ? 'Less' : 'Remove');
+      Shop.set(q, { qty: q.qty });
       refreshSuggestFor(q);
       return;
     }
+    if ((t = e.target.closest('[data-store-pick]'))) return pickStore(t.dataset.storePick);
     if ((t = e.target.closest('[data-add]'))) return add(t.dataset.add);
     if ((t = e.target.closest('[data-store]'))) { V.store = t.dataset.store; return paintList(); }
     if ((t = e.target.closest('[data-drawer]'))) { V.drawer = !V.drawer; return paintList(); }
     if ((t = e.target.closest('[data-revive]'))) {
       var r = D.groceries.filter(function (x) { return x.id === t.dataset.revive; })[0];
-      r.done = false; paintList(); paintSuggest(); App.emit('data');
+      r.done = false; Shop.set(r, { done: false }); paintList(); paintSuggest(); App.emit('data');
       return App.toast('Added back <b>' + App.esc(r.name) + '</b>', { icon: 'cart', ms: 2500 });
     }
     if ((t = e.target.closest('[data-clear]'))) {
@@ -226,10 +276,17 @@
     }
   }
 
+  // The list refreshed from the server: repaint, unless a check-off is mid-animation.
+  App.on('shop', function () {
+    if (!V.el || App.current !== 'shopping' || Object.keys(V.pending).length) return;
+    paintList(); paintSuggest();
+  });
+
   App.register('shopping', {
     show: function (el) {
       if (!V.el) { V.el = el; el.addEventListener('click', onClick); }
       render();
+      Shop.load();
     }
   });
 })();

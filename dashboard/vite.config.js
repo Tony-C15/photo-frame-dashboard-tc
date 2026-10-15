@@ -16,8 +16,9 @@ function api() {
     // Cast speakers need the home LAN, so that route is served only here (dynamic import: Node-only libraries).
     const r = url.pathname.startsWith('/api/cast/') ? await (await import('./server/cast.js')).castApi(apiReq) : await handleApi(apiReq, env);
     res.statusCode = r ? r.status : 404;
+    console.log(new Date().toLocaleTimeString(), req.method, url.pathname, res.statusCode, String(req.headers['user-agent'] || '').includes('Android') ? '[frame]' : '[desktop]'); // so a device's requests can be seen
     Object.entries(r ? r.headers : {}).forEach(([k, v]) => res.setHeader(k, v));
-    res.end(r ? r.body : '');
+    res.end(!r ? '' : typeof r.body === 'string' ? r.body : Buffer.from(r.body)); // radar / map tiles are binary
   }); }; // no return value: Vite would run a returned function as a post-hook
   return { name: 'frame-api', configureServer: mount, configurePreviewServer: mount };
 }

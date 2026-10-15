@@ -1,0 +1,63 @@
+/* Weather page: forecast column + radar map. 1192×800 view minus 24px padding. */
+.wx { height: 100%; display: grid; grid-template-columns: 388px 1fr; gap: var(--space-4); }
+.wx-left { min-height: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+.wx-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.wx-back { padding: 0 var(--space-4) 0 var(--space-2); }
+.wx-place { font-size: var(--fs-meta); font-weight: 600; color: var(--ink-muted); }
+.wx-note { color: var(--ink-muted); }
+
+.wx-cur { padding: var(--space-3) var(--space-4); }
+.wx-cur-row { display: flex; align-items: center; gap: var(--space-3); }
+.wx-temp { font-size: 76px; line-height: 80px; }
+.wx-cur-meta { display: flex; flex-direction: column; font-size: var(--fs-meta); color: var(--ink-muted); font-variant-numeric: tabular-nums; white-space: pre; }
+.wx-cur-meta b { font-weight: 600; font-size: var(--fs-body); color: var(--ink); }
+.wx-say { margin: var(--space-2) 0; font-size: var(--fs-meta); line-height: var(--lh-meta); color: var(--ink-muted); }
+.wx-say b { font-weight: 600; color: var(--ink); }
+.wx-facts { display: flex; flex-wrap: wrap; gap: 4px var(--space-4); font-size: var(--fs-meta); font-weight: 500; color: var(--ink-muted); }
+.wx-facts span { display: inline-flex; align-items: center; gap: 6px; }
+
+.wx-days { padding: var(--space-2) var(--space-4); }
+.wx-day { display: grid; grid-template-columns: 70px 32px 1fr 44px 44px; align-items: center; min-height: 34px; font-size: var(--fs-body); }
+.wx-day b { font-weight: 600; }
+.wx-day-p { font-size: var(--fs-meta); font-weight: 600; color: var(--ink-muted); padding-left: var(--space-2); }
+.wx-day.is-wet .wx-day-i, .wx-day.is-wet .wx-day-p { color: var(--calendar-family); }
+.wx-day-lo { text-align: right; color: var(--ink-muted); font-weight: 500; }
+.wx-day-hi { text-align: right; }
+
+.wx-hours { flex: 1; min-height: 0; padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; justify-content: flex-end; }
+.wx-hrs { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; align-items: end; height: 84px; }
+.wx-hr { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: relative; }
+.wx-hr i { display: block; width: 100%; border-radius: 3px 3px 0 0; background: var(--line); }
+.wx-hr.is-wet i { background: var(--calendar-family); }
+.wx-hr span { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: var(--fs-label); font-weight: 600; color: var(--ink-muted); white-space: nowrap; }
+.wx-hrs-note { margin-top: 26px; font-size: var(--fs-label); line-height: var(--lh-label); color: var(--ink-muted); }
+
+/* map */
+.wx-map { padding: 0; overflow: hidden; background: var(--surface-sunken); min-height: 0; }
+.wx-base, .wx-radar, .wx-labels { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.wx-radar { opacity: .85; }
+.wx-labels { pointer-events: none; }
+.wx-home { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--plum); box-shadow: 0 0 0 3px var(--surface), 0 1px 6px rgba(16, 24, 40, .35); }
+.wx-zoom { position: absolute; top: var(--space-3); right: var(--space-3); display: flex; padding: 3px; gap: 3px; border-radius: var(--radius-md); background: rgba(255, 255, 255, .92); box-shadow: var(--shadow-card); }
+.wx-zoom button { min-width: 84px; min-height: 44px; border-radius: var(--radius-sm); text-align: center; font-size: var(--fs-button); font-weight: 600; color: var(--ink-muted); }
+.wx-zoom button.is-on { background: var(--plum); color: var(--on-plum); }
+.wx-radar-note { position: absolute; left: 50%; top: 45%; transform: translateX(-50%); padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill); background: rgba(255, 255, 255, .94); box-shadow: var(--shadow-card); font-weight: 600; color: var(--ink-muted); }
+.wx-credit { position: absolute; right: var(--space-3); bottom: 84px; padding: 2px 8px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .8); font-size: 11px; color: var(--ink-muted); }
+.wx-legend { position: absolute; left: var(--space-3); bottom: 84px; display: flex; align-items: center; gap: var(--space-2); padding: 6px var(--space-3); border-radius: var(--radius-pill); background: rgba(255, 255, 255, .92); font-size: var(--fs-label); font-weight: 600; color: var(--ink-muted); }
+.wx-legend i { width: 120px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #7ad0f5, #3fa34d, #f2e03a, #f08a24, #d6262b, #8e1b8f); }
+.wx-bar { position: absolute; left: var(--space-3); right: var(--space-3); bottom: var(--space-3); height: 64px; display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-4) 0 var(--space-2); border-radius: var(--radius-lg); background: rgba(255, 255, 255, .94); box-shadow: var(--shadow-card); }
+.wx-play { flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--plum); color: var(--on-plum); }
+.wx-play:active { transform: scale(.94); }
+.wx-ticks { flex: 1; display: flex; gap: 3px; }
+.wx-ticks button { flex: 1; height: 48px; display: flex; align-items: center; }
+.wx-ticks i { display: block; width: 100%; height: 8px; border-radius: 4px; background: var(--line); }
+.wx-ticks { gap: 2px; }
+.wx-ticks button.is-fc i { background: var(--calendar-family-soft); }
+.wx-ticks button.is-fc + button:not(.is-fc), .wx-ticks button:not(.is-fc) + button.is-fc { margin-left: 6px; }
+.wx-ticks button.is-on i { background: var(--plum); height: 14px; }
+.wx-when { flex: none; width: 150px; display: flex; flex-direction: column; text-align: right; line-height: 1.15; }
+.wx-when b { font-size: var(--fs-body); font-weight: 600; font-variant-numeric: tabular-nums; }
+.wx-when span { font-size: var(--fs-label); color: var(--ink-muted); }
+
+.wx-scale { position: absolute; left: var(--space-4); top: var(--space-4); height: 14px; border: 2px solid var(--ink); border-top: 0; font-size: var(--fs-label); font-weight: 600; text-align: center; filter: drop-shadow(0 0 2px #fff); }
+.wx-scale span { display: block; margin-top: -22px; }

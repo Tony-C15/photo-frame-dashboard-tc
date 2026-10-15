@@ -5,3 +5,7 @@ kiosk/build
 .env
 .env.local
 .dev.vars
+
+# Personal transit setup (which stations) and the timetable built from it
+/transit.json
+/public/transit/

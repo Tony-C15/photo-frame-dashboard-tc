@@ -24,6 +24,9 @@
 .s-name b { font-size: 23px; font-weight: 600; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; }
 .s-name small { font-size: 16px; color: var(--ink-muted); }
 .s-store { font-size: 13px; font-weight: 600; padding: 5px 9px; border-radius: var(--radius-sm); background: var(--plum-soft); color: var(--plum); }
+.s-chip { flex: none; display: inline-flex; align-items: center; gap: 4px; min-height: 48px; padding: 0 14px; margin-left: 8px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 600; color: var(--ink-muted); box-shadow: inset 0 0 0 2px var(--line); }
+.s-chip.is-set { background: var(--plum-soft); color: var(--plum); box-shadow: none; }
+.s-pick { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .s-qty { display: flex; align-items: center; background: var(--surface-sunken); border-radius: var(--radius-pill); margin-left: 4px; }
 .s-qty button { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 50%; }
 .s-qty button:active { background: var(--line); }
@@ -50,8 +53,9 @@
 .s-input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; font-size: 28px; font-weight: 600; }
 .s-input::placeholder { color: var(--ink-muted); font-weight: 400; }
 
-.s-suggest { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.s-suggest { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
 .s-usuals { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; gap: 8px; flex: 1; min-height: 0; }
+.s-usuals--often { flex: none; grid-auto-rows: auto; }
 .s-tile {
   display: flex; flex-direction: column; justify-content: space-between;
   padding: 12px 14px; border-radius: 14px; background: var(--surface);

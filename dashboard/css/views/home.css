@@ -15,7 +15,8 @@
 .h-date b { font-weight: 400; margin-right: 6px; }
 
 /* ---- weather (WeatherChip + forecast) */
-.h-weather { grid-column: 5 / 10; min-height: 0; overflow: hidden; padding: var(--space-3) var(--space-4); background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); display: flex; flex-direction: column; justify-content: flex-end; }
+.h-weather:active { transform: scale(.99); }
+.h-weather { cursor: pointer; grid-column: 5 / 10; min-height: 0; overflow: hidden; padding: var(--space-3) var(--space-4); background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); display: flex; flex-direction: column; justify-content: flex-end; }
 .h-wx-top { display: flex; align-items: center; gap: var(--space-3); }
 .h-wx-icon { color: var(--ink); }
 .h-wx-temp { font-family: var(--font-display); font-weight: 400; font-size: 52px; line-height: 56px; }
@@ -90,9 +91,15 @@
 .h-more { min-height: var(--touch-min); align-self: center; font-size: var(--fs-button); font-weight: 600; color: var(--plum); text-align: left; padding: 0 var(--space-3); }
 
 /* ---- side column */
-.h-side { grid-column: 8 / 13; display: grid; grid-template-rows: 232px 168px; align-content: start; gap: var(--space-4); min-height: 0; }
+.h-side { grid-column: 8 / 13; display: grid; grid-template-rows: 232px 1fr; align-content: start; gap: var(--space-4); min-height: 0; }
 
-.h-duo { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.h-low { min-height: 0; display: grid; grid-template-columns: 1fr 224px; gap: var(--space-4); }
+.h-pair { min-height: 0; display: grid; grid-template-rows: 1fr 1fr; gap: var(--space-3); }
+.h-pair .card { padding: var(--space-2) var(--space-3); min-height: 0; overflow: hidden; justify-content: center; }
+.h-pair .h-stat .num { font-size: 32px; line-height: 36px; }
+.h-pair .h-recent li:nth-child(n+3) { display: none; }
+.h-pair .h-st-row { min-height: 0; }
+.h-pair .h-st-row .h-st-temp { font-size: 40px; line-height: 44px; }
 .h-shop, .h-status { display: flex; flex-direction: column; gap: var(--space-1); }
 .h-stat { display: flex; align-items: baseline; gap: var(--space-2); }
 .h-stat .num { font-family: var(--font-display); font-weight: 400; font-size: var(--fs-display); line-height: var(--lh-display); }
@@ -125,3 +132,23 @@
 .h-bin.is-soon { background: var(--plum-soft); }
 .h-w-note { font-size: var(--fs-body); color: var(--ink-muted); line-height: var(--lh-body); }
 .h-w-note b { color: var(--ink); font-weight: 600; }
+
+/* ---- time to clinic (tap = check traffic now): tall card, one row per clinic */
+button.h-clinic { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); }
+button.h-clinic:active { transform: scale(.98); }
+.h-cl-head { display: flex; align-items: center; gap: var(--space-3); }
+.h-cl-head .label { flex: 1; font-size: var(--fs-meta); }
+.h-cl-up { font-size: var(--fs-label); font-weight: 600; color: var(--ink-muted); }
+.h-cl-go { flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--plum-soft); color: var(--plum); }
+.h-cl-go.is-busy svg { animation: h-spin 1s linear infinite; }
+@keyframes h-spin { to { transform: rotate(360deg); } }
+.h-cl-rows { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.h-cl-row { flex: 1; min-height: 0; display: flex; align-items: center; gap: var(--space-3); border-top: 1px solid var(--line); }
+.h-cl-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.h-cl-who b { font-size: var(--fs-title); line-height: var(--lh-title); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h-cl-time { flex: none; font-size: var(--fs-title); font-weight: 600; white-space: nowrap; }
+.h-cl-time b { font-size: 56px; line-height: 60px; font-weight: 400; margin-right: 2px; }
+.h-cl-note { font-size: var(--fs-meta); font-weight: 600; color: var(--ink-muted); white-space: nowrap; }
+.h-cl-note.is-slow { color: var(--alert); }
+.h-cl-note.is-clear { color: var(--done); }
+.h-cl-msg { flex: 1; display: flex; align-items: center; }

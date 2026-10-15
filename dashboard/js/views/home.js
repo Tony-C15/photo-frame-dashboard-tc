@@ -177,7 +177,46 @@
     }).catch(function () { W.error = 'server unreachable'; if (V.el && V.el.firstChild && !W.data) V.el.querySelector('.h-waste').innerHTML = waste(); });
   }
 
+  // ------------------------------------------------------------ time to clinic (Mapbox traffic; only updates when tapped)
+  var C = { data: null, busy: false, error: '', off: false };
+  // minutes vs the usual time for that hour -> the note under the time and its colour
+  function clinicNote(c) {
+    var diff = c.typical ? c.minutes - c.typical : null;
+    return {
+      tone: diff == null ? '' : diff >= Math.max(5, c.typical * 0.25) ? ' is-slow' : diff <= 1 ? ' is-clear' : '',
+      text: diff == null ? c.km + ' km' : diff >= 2 ? '+' + diff + ' min vs usual' : diff <= -2 ? -diff + ' min faster than usual' : 'Normal traffic'
+    };
+  }
+  function clinic() {
+    var d = C.data;
+    var go = '<span class="h-cl-go' + (C.busy ? ' is-busy' : '') + '">' + App.icon('refresh', 26) + '</span>';
+    var head = function (up) { return '<div class="h-cl-head"><div class="label">' + App.icon('car', 18) + 'Time to clinic</div>' + (up ? '<span class="h-cl-up">' + up + '</span>' : '') + go + '</div>'; };
+    var note = function (t) { return '<p class="h-w-note h-cl-msg">' + t + '</p>'; };
+    if (C.off) return '<div class="h-cl-head"><div class="label">' + App.icon('car', 18) + 'Time to clinic</div></div>' + note('Not set up yet');
+    if (!d) return head('') + note(C.busy ? 'Checking traffic…' : C.error ? 'Couldn’t check · ' + App.esc(C.error) : 'Tap to check traffic');
+    var up = C.busy ? 'Checking…' : C.error ? 'Couldn’t refresh' : 'Updated ' + App.fmt.time(new Date(d.at + D.weather.skew));
+    return head(up) + '<div class="h-cl-rows">' + d.clinics.map(function (c) {
+      if (c.error) return '<div class="h-cl-row"><div class="h-cl-who"><b>' + App.esc(c.name) + '</b><span class="h-cl-note">Couldn’t check</span></div></div>';
+      var n = clinicNote(c);
+      return '<div class="h-cl-row"><div class="h-cl-who"><b>' + App.esc(c.name) + '</b><span class="h-cl-note' + n.tone + '">' + n.text + (c.km ? ' · ' + c.km + ' km' : '') + '</span></div>' +
+        '<div class="h-cl-time"><b class="serif">' + c.minutes + '</b> min</div></div>';
+    }).join('') + '</div>';
+  }
+  function paintClinic() { if (V.el && V.el.firstChild) V.el.querySelector('.h-clinic').innerHTML = clinic(); }
+  function loadClinic() {
+    if (C.busy) return;
+    C.busy = true; C.error = ''; paintClinic();
+    fetch('/api/clinic').then(function (r) { return r.json(); }).then(function (d) {
+      if (d.configured === false) { C.off = true; return; }
+      if (d.error) { C.error = d.error; return; }
+      C.data = d; C.off = false;
+    }).catch(function () { C.error = 'server unreachable'; }).then(function () { C.busy = false; paintClinic(); });
+  }
+
   function shopping() {
+    var S = D.shop;
+    if (!S.live) return '<div class="label">Shopping</div><div class="h-st-row is-muted"><span>' +
+      (S.off ? 'Shopping list not connected' : S.error ? 'Can’t reach the list' : 'Loading…') + '</span></div>';
     var open = D.groceries.filter(function (g) { return !g.done; });
     var recent = open.slice(-3).reverse();
     return '<div class="label">Shopping</div>' +
@@ -209,6 +248,7 @@
     el.querySelector('.h-lanes').innerHTML = lanes();
     el.querySelector('.h-waste').innerHTML = waste();
     el.querySelector('.h-shop').innerHTML = shopping();
+    el.querySelector('.h-clinic').innerHTML = clinic();
     var st = el.querySelector('.h-status');
     st.innerHTML = status();
     // The whole card takes the colour of what the thermostat is doing, so heating / cooling reads from across the room.
@@ -222,16 +262,18 @@
       if (!el.firstChild) {
         el.innerHTML = '<div class="home">' +
           '<div class="h-clock" data-go="calendar"></div>' +
-          '<div class="h-weather"></div>' +
+          '<div class="h-weather" data-go="weather"></div>' +
           '<div class="h-bath"></div>' +
-          '<div class="h-main"><div class="h-hero-slot"></div><div class="h-lanes" ></div></div>' +
+          '<div class="h-main"><div class="h-hero-slot"></div><div class="h-low"><div class="h-lanes"></div>' +
+          '  <div class="h-pair"><button class="h-shop card" data-go="shopping"></button><button class="h-status card" data-go="control"></button></div></div></div>' +
           '<div class="h-side">' +
           '  <div class="h-waste card"></div>' +
-          '  <div class="h-duo"><button class="h-shop card" data-go="shopping"></button><button class="h-status card" data-go="control"></button></div>' +
+          '  <button class="h-clinic card" data-clinic></button>' +
           '</div></div>';
         el.addEventListener('click', function (e) {
           var ev = e.target.closest('[data-ev]');
           if (ev) { App.eventSheet(App.findEvent(ev.dataset.ev)); return; }
+          if (e.target.closest('[data-clinic]')) { loadClinic(); return; }
           var g = e.target.closest('[data-go]');
           if (g) App.go(g.dataset.go);
         });

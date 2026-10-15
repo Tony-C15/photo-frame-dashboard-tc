@@ -78,7 +78,9 @@ async function fetchDevices(env) {
         eco: eco.mode === 'MANUAL_ECO',
         hvac: (tr[T + 'ThermostatHvac'] || {}).status,
         heatC: sp.heatCelsius, coolC: sp.coolCelsius,
-        scale: (tr[T + 'Settings'] || {}).temperatureScale || 'CELSIUS'
+        scale: (tr[T + 'Settings'] || {}).temperatureScale || 'CELSIUS',
+        // The API can only run the fan on a timer (1 s – 12 h); present only if the system has a fan wired.
+        fan: tr[T + 'Fan'] ? { on: tr[T + 'Fan'].timerMode === 'ON', until: tr[T + 'Fan'].timerTimeout || null } : null
       });
     } else if (kind !== 'other') {
       out.protocols = (tr[T + 'CameraLiveStream'] || {}).supportedProtocols || [];
@@ -96,6 +98,7 @@ const RULES = {
   [C + 'ThermostatTemperatureSetpoint.SetHeat']: (p) => temp(p.heatCelsius),
   [C + 'ThermostatTemperatureSetpoint.SetCool']: (p) => temp(p.coolCelsius),
   [C + 'ThermostatTemperatureSetpoint.SetRange']: (p) => temp(p.heatCelsius) && temp(p.coolCelsius) && p.heatCelsius < p.coolCelsius,
+  [C + 'Fan.SetTimer']: (p) => ['ON', 'OFF'].includes(p.timerMode) && (p.duration === undefined || (/^\d{1,5}s$/.test(p.duration) && parseInt(p.duration, 10) >= 1 && parseInt(p.duration, 10) <= 43200)),
   [C + 'CameraLiveStream.GenerateWebRtcStream']: (p) => typeof p.offerSdp === 'string' && p.offerSdp.length < 20000,
   [C + 'CameraLiveStream.ExtendWebRtcStream']: (p) => typeof p.mediaSessionId === 'string',
   [C + 'CameraLiveStream.StopWebRtcStream']: (p) => typeof p.mediaSessionId === 'string'
