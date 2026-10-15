@@ -288,6 +288,19 @@
       '<footer class="hb-foot">' + stat(m.pee, 'pee') + stat(m.poo, 'poo') + stat(m.count, 'today') + '</footer>', false);
   }
 
+  // Tiles are small and every one must stay one line, so long food names are shortened (the allergen sheet still shows the full name).
+  var SHORT = [
+    [/\bcottage cheese\b/i, 'cottage ch.'], [/\bcream cheese\b/i, 'cream ch.'], [/\bpeanut butter\b/i, 'peanut btr'],
+    [/\b(almond|cashew|hazelnut|nut) butter\b/i, '$1 btr'], [/\bscrambled eggs?\b/i, 'scr. egg'], [/\bhard[- ]boiled eggs?\b/i, 'boiled egg'],
+    [/\b(greek |plain |natural )?yogh?urt\b/i, 'yogurt'], [/\b(macaroni|mac) (and|&) cheese\b/i, 'mac & cheese'], [/\bfrench toast\b/i, 'fr. toast'],
+    [/\bsweet potato\b/i, 'sw. potato'], [/\bblueberr(y|ies)\b/i, 'blueberry'], [/\bbanana bread\b/i, 'banana bread']
+  ];
+  function shortFood(name) {
+    var n = String(name || '').trim();
+    SHORT.forEach(function (r) { n = n.replace(r[0], r[1]); });
+    if (n.length > 13) n = n.split(/\s*(?:,|\/|\+|&|\bwith\b|\band\b)\s*/i)[0]; // keep the first item of a mixed dish
+    return n;
+  }
   function solidsCard() {
     var F = foodsModel();
     var meals = F.today.length ? F.today.map(function (e) {
@@ -303,7 +316,7 @@
       }
       return x.start == null
         ? '<li class="hb-al hb-al--none"' + data + '><span class="hb-al-n">' + x.a.label + '</span><b class="hb-al-v">Not yet</b></li>'
-        : '<li class="hb-al' + (x.due ? ' hb-al--due' : '') + '"' + data + '><span class="hb-al-n">' + x.a.label + '<i class="hb-al-c">' + x.count7 + '/' + GOAL + '</i></span><b class="hb-al-v">' + daysAgo(x.start) + '</b><span class="hb-al-s">' + esc(x.food) + '</span></li>';
+        : '<li class="hb-al' + (x.due ? ' hb-al--due' : '') + '"' + data + '><span class="hb-al-n">' + x.a.label + '<i class="hb-al-c">' + x.count7 + '/' + GOAL + '</i></span><b class="hb-al-v">' + daysAgo(x.start) + '</b><span class="hb-al-s">' + esc(shortFood(x.food)) + '</span></li>';
     }
     var model = allergenModel();
     var al = model.filter(function (x) { return !x.a.nut; }).map(tile).join('') +
