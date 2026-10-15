@@ -46,12 +46,6 @@
   --calendar-birthdays: #52b04a; --calendar-birthdays-soft: #e3f3e1;
   --calendar-holidays: #ff7f00;  --calendar-holidays-soft: #ffe9d6;
 
-  /* Huckleberry card colours (Baby tab only), same hues as the Huckleberry app so cards line up at a glance, softened to sit with the member palette; ink text on all */
-  --hb-sleep: #8fd0e2;
-  --hb-feed: #f6a583;
-  --hb-diaper: #f1d27a;
-  --hb-solids: #e8a2c0;
-
   /* type */
   --font-display: Ovo, Georgia, "Times New Roman", serif;
   --font-sans: Figtree, "Avenir Next", "Segoe UI", system-ui, sans-serif;
