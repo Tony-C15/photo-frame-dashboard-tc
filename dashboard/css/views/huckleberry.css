@@ -21,7 +21,7 @@
 .hb-feed { --c: var(--hb-feed); }
 .hb-diaper { --c: var(--hb-diaper); }
 .hb-solids { --c: var(--hb-solids); }
-.hb-next { --c: var(--hb-solids); }
+.hb-next { --c: var(--member-lilac); }
 .hb-sleep, .hb-feed, .hb-diaper, .hb-solids { background: var(--c); color: var(--ink); }
 .hb-card.is-live { box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--ink); }
 .hb-head { display: flex; align-items: center; gap: 10px; }
