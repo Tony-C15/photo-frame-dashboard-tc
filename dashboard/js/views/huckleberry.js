@@ -1,4 +1,4 @@
-// Huckleberry: live baby-tracker data — running timers, last feed / sleep / diaper, solid foods, activities.
+// Huckleberry: live baby-tracker data — running timers, last feed / sleep / diaper, solid foods and the allergen schedule.
 // Display only. Data comes from js/huckleberry.js; sign-in happens on the frame (token kept in localStorage).
 (function () {
   'use strict';
@@ -6,16 +6,17 @@
   var V = {
     el: null, active: false, status: 'init', // init | out | loading | ready | error
     kids: [], cid: null, live: null, hist: null,
-    err: '', loginErr: '', busy: false, liveAt: 0, histAt: 0, tryAt: 0, submitting: false
+    err: '', loginErr: '', busy: false, liveAt: 0, histAt: 0, ever: null, everAt: 0, tryAt: 0, submitting: false
   };
   var CKEY = 'hb.child';
   var LIVE_EVERY = 30, HIST_EVERY = 300; // seconds
 
-  var MODES = [
-    ['bath', 'Bath'], ['tummyTime', 'Tummy time'], ['storyTime', 'Story time'], ['screenTime', 'Screen time'],
-    ['outdoorPlay', 'Outdoor play'], ['indoorPlay', 'Indoor play'], ['skinToSkin', 'Skin-to-skin'], ['brushTeeth', 'Brush teeth']
-  ];
-  var REACTIONS = { LOVED: 'Loved', MEH: 'Meh', HATED: 'Hated', ALLERGIC: 'Allergic' };
+  // How each reaction is shown. (Plain Unicode 6.0 emoji — fine on the frame's Android 6 emoji font.)
+  var REACTIONS = {
+    LOVED: { e: '😍', label: 'Loved it' }, MEH: { e: '😑', label: 'Meh' },
+    HATED: { e: '😖', label: 'Hated it' }, ALLERGIC: { e: '😡', label: 'Allergy or sensitivity' }
+  };
+  function emoji(r) { return r ? '<span class="hb-e" role="img" aria-label="' + REACTIONS[r].label + '">' + REACTIONS[r].e + '</span>' : ''; }
   var esc = function (s) { return App.esc(s); };
 
   // ------------------------------------------------------------ time + formatting
@@ -103,39 +104,100 @@
     m.count = today(V.hist && V.hist.diaper).length;
     return m;
   }
-  function actModel() {
-    var A = V.live.act || {}, rows = [];
-    var totals = {};
-    today(V.hist && V.hist.act).forEach(function (e) { totals[e.mode] = (totals[e.mode] || 0) + (e.duration || 0); });
-    MODES.forEach(function (md) {
-      var k = md[0], t = pick(A, ['timer', k]), last = pick(A, ['prefs', 'last' + k.charAt(0).toUpperCase() + k.slice(1)]);
-      var row = { k: k, label: md[1], total: totals[k] || 0, last: last && last.start ? last.start : 0 };
-      if (t && t.active && t.startTime) {
-        row.on = true; row.paused = !!t.paused; row.t0 = t.startTime / 1000; row.fixed = t.paused ? (t.duration || 0) : 0;
-      }
-      rows.push(row);
-    });
-    rows.sort(function (a, b) { return (b.on ? 1 : 0) - (a.on ? 1 : 0); });
-    return rows;
+  // The common baby allergens, matched on the food's name (Huckleberry has no allergen field on a logged
+  // food, so this is a keyword match — e.g. "yogurt" counts as milk). `skip` removes look-alikes first
+  // ("peanut butter" is not dairy, "coconut milk" is not milk, "rice noodles" are not wheat).
+  var ALLERGENS = [
+    { k: 'milk', label: 'Milk', re: /\b(milk|yogh?urt|cheese|cheddar|mozzarella|parmesan|ricotta|cream|butter|kefir|custard|dairy|paneer|ghee|whey)\b/i, skip: /\b(coconut|almond|oat|soy|rice|cashew|nut|peanut|seed|apple|cocoa)\s+(milk|butter)\b|\bbutternut\b/ig },
+    { k: 'egg', label: 'Egg', re: /\b(eggs?|omelet+e?|frittata|mayo|mayonnaise|meringue|quiche)\b/i },
+    { k: 'peanut', label: 'Peanut', re: /\b(peanuts?|groundnuts?)\b/i },
+    { k: 'wheat', label: 'Wheat', re: /\b(wheat|bread|toast|pasta|noodles?|spaghetti|macaroni|couscous|flour|pancakes?|waffles?|muffins?|biscuits?|bagels?|tortillas?|udon|ramen|cookies?|cake|pizza|baguette|croissant)\b/i, skip: /\b(rice|glass|mung|sweet potato)\s+noodles?\b/ig },
+    { k: 'soy', label: 'Soy', re: /\b(soy|soya|soybeans?|tofu|edamame|miso|tempeh|natto)\b/i },
+    { k: 'fish', label: 'Fish', re: /\b(fish|salmon|tuna|cod|tilapia|trout|halibut|sardines?|anchov(y|ies)|mackerel|haddock|snapper|pollock|herring|swordfish|mahi)\b/i },
+    { k: 'shellfish', label: 'Shellfish', re: /\b(shrimps?|prawns?|crab|lobster|scallops?|clams?|oysters?|mussels?|shellfish|crawfish|crayfish|squid|octopus)\b/i },
+    { k: 'sesame', label: 'Sesame', re: /\b(sesame|tahini|hummus|hummous)\b/i },
+    // tree nuts, one by one (a generic "mixed nuts" / "nut butter" lands under Other nuts)
+    { k: 'almond', label: 'Almond', nut: true, re: /\balmonds?\b/i },
+    { k: 'cashew', label: 'Cashew', nut: true, re: /\bcashews?\b/i },
+    { k: 'walnut', label: 'Walnut', nut: true, re: /\bwalnuts?\b/i },
+    { k: 'pecan', label: 'Pecan', nut: true, re: /\bpecans?\b/i },
+    { k: 'pistachio', label: 'Pistachio', nut: true, re: /\bpistachios?\b/i },
+    { k: 'hazelnut', label: 'Hazelnut', nut: true, re: /\b(hazelnuts?|nutella|filberts?)\b/i },
+    { k: 'macadamia', label: 'Macadamia', nut: true, re: /\bmacadamias?\b/i },
+    { k: 'othernut', label: 'Other nuts', nut: true, re: /\b(brazil nuts?|pine nuts?|chestnuts?|tree nuts?|nut butter|mixed nuts|nuts)\b/i, skip: /\b(pea|ground|coco|butter|dough|wal|hazel|pista)nuts?\b|\bpeanut\b/ig }
+  ];
+  function hasAllergen(a, name) {
+    var n = a.skip ? name.replace(a.skip, ' ') : name;
+    return a.re.test(n);
   }
-  // Foods seen in the last 30 days: most recent meal wins for the reaction shown.
+  // Solids meals, newest first. All-time when we have it; otherwise just the last 30 days (and we say so).
+  function solidsMeals() {
+    var src = V.ever || ((V.hist && V.hist.feed) || []).filter(function (e) { return e.mode === 'solids'; });
+    return src.slice().sort(function (a, b) { return b.start - a.start; });
+  }
+  // Paused allergens are skipped everywhere: never "overdue", never suggested. Kept in this device's
+  // localStorage, per child (Huckleberry has nowhere to store it).
+  function pausedSet() {
+    if (V._pcid !== V.cid) {
+      V._pcid = V.cid;
+      try { V._paused = JSON.parse(localStorage.getItem('hb.paused.' + V.cid) || '[]'); } catch (e) { V._paused = []; }
+    }
+    return V._paused;
+  }
+  function isPaused(k) { return pausedSet().indexOf(k) > -1; }
+  function setPaused(k, on) {
+    var list = pausedSet().filter(function (x) { return x !== k; });
+    if (on) list.push(k);
+    V._paused = list;
+    try { localStorage.setItem('hb.paused.' + V.cid, JSON.stringify(list)); } catch (e) { /* ignore */ }
+  }
+
+  var GOAL = 2; // servings of each introduced allergen per rolling 7 days
+  function allergenModel() {
+    var meals = solidsMeals(), weekAgo = nowS() - 7 * 86400;
+    return ALLERGENS.map(function (a) {
+      var x = { a: a, count7: 0 };
+      meals.forEach(function (m) { // newest first
+        var hit = foodNames(m.foods).filter(function (n) { return hasAllergen(a, n); });
+        if (!hit.length) return;
+        if (x.start == null) { x.start = m.start; x.food = hit[0]; }
+        if (m.start >= weekAgo) x.count7++;
+        x.total = (x.total || 0) + 1;
+        x.first = m.start; // ends up as the oldest
+      });
+      x.paused = isPaused(a.k);
+      x.due = !x.paused && x.start != null && x.count7 < GOAL; // only foods already introduced can be "overdue"
+      return x;
+    });
+  }
+
+  // What to serve next: first anything introduced but behind this week (most behind first); otherwise the next
+  // allergen not tried yet, in the usual order of introduction. Also warns if one was only just introduced.
+  var ORDER = ['peanut', 'egg', 'milk', 'wheat', 'soy', 'sesame', 'fish', 'shellfish', 'almond', 'cashew', 'walnut', 'hazelnut', 'pistachio', 'pecan', 'macadamia', 'othernut'];
+  function nextUp(model) {
+    var due = model.filter(function (x) { return x.due; }).sort(function (a, b) { return a.count7 - b.count7 || a.start - b.start; });
+    var never = model.filter(function (x) { return x.start == null && !x.paused; }).sort(function (a, b) { return ORDER.indexOf(a.a.k) - ORDER.indexOf(b.a.k); });
+    var justStarted = model.filter(function (x) { return !x.paused && x.first != null && x.first >= nowS() - 3 * 86400; });
+    return { paused: model.filter(function (x) { return x.paused; }), due: due, never: never, pick: due[0] || never[0] || null, fromDue: !!due[0], justStarted: justStarted[0] || null };
+  }
+
   function foodsModel() {
     var meals = ((V.hist && V.hist.feed) || []).filter(function (e) { return e.mode === 'solids'; });
-    var seen = {}, list = [], weekAgo = nowS() - 7 * 86400;
-    meals.forEach(function (e) { // newest first
-      foodNames(e.foods).forEach(function (n) {
-        var key = n.toLowerCase();
-        if (!seen[key]) { seen[key] = { name: n, last: e.start, first: e.start, n: 0, r: reactionOf(e) }; list.push(seen[key]); }
-        seen[key].n++; seen[key].first = e.start;
-      });
-    });
-    list.forEach(function (f) { f.isNew = f.first >= weekAgo; });
-    return { meals: meals, today: today(meals), foods: list, fresh: list.filter(function (f) { return f.isNew; }).length };
+    return { today: today(meals) };
+  }
+  // "Today", "Yesterday", "5d ago", "3w ago", "4mo ago" — by calendar day, not 24-hour blocks. Short so it fits the tile.
+  function daysAgo(sec) {
+    var d = Math.round((dayStartS() - (function () { var x = new Date(sec * 1000); x.setHours(0, 0, 0, 0); return x.getTime() / 1000; })()) / 86400);
+    if (d <= 0) return 'Today';
+    if (d === 1) return 'Yesterday';
+    if (d < 14) return d + 'd ago';
+    if (d < 70) return Math.round(d / 7) + 'w ago';
+    return Math.round(d / 30) + 'mo ago';
   }
 
   // ------------------------------------------------------------ rendering
   function card(cls, c, rgb, ink, inner, on) {
-    return '<section class="hb-card ' + cls + (on ? ' is-live' : '') + '" style="--c:' + c + ';--c-rgb:' + rgb + ';--c-ink:' + ink + '">' + inner + '</section>';
+    return '<section class="hb-card ' + cls + (on ? ' is-live' : '') + '">' + inner + '</section>';
   }
   function head(icon, title, badge) {
     return '<header class="hb-head"><span class="hb-ic">' + App.icon(icon, 22) + '</span><b>' + title + '</b>' + (badge ? '<span class="hb-badge">' + badge + '</span>' : '') + '</header>';
@@ -167,7 +229,7 @@
       sub = m.last.what + (m.last.detail ? ' · ' + esc(m.last.detail) : '') + ' · ' + at(m.last.t);
     } else { main = '<span class="num">—</span>'; sub = 'No feeds logged yet'; }
     return card('hb-feed', '#FFB000', '255 176 0', '#111111',
-      head('drop', 'Feeding', badge) + '<div class="hb-big">' + main + '</div><p class="hb-sub">' + sub + '</p>' +
+      head('bottle', 'Feeding', badge) + '<div class="hb-big">' + main + '</div><p class="hb-sub">' + sub + '</p>' +
       '<footer class="hb-foot">' + stat(m.count, 'feeds today') + stat(m.counts.solids, 'solids') + '</footer>', m.on);
   }
   function diaperCard() {
@@ -177,7 +239,7 @@
       sub = 'Last change · ' + at(m.last.start) + (m.last.mode ? ' · ' + m.last.mode : '');
     } else { main = '<span class="num">—</span>'; sub = 'No diapers logged yet'; }
     return card('hb-diaper', '#00A36C', '0 163 108', '#FFFFFF',
-      head('box', 'Diapers') + '<div class="hb-big">' + main + '</div><p class="hb-sub">' + sub + '</p>' +
+      head('diaper', 'Diapers') + '<div class="hb-big">' + main + '</div><p class="hb-sub">' + sub + '</p>' +
       '<footer class="hb-foot">' + stat(m.pee, 'pee') + stat(m.poo, 'poo') + stat(m.count, 'today') + '</footer>', false);
   }
 
@@ -186,27 +248,67 @@
     var meals = F.today.length ? F.today.map(function (e) {
       var r = reactionOf(e), names = foodNames(e.foods);
       return '<li><span class="hb-t">' + at(e.start) + '</span><span class="hb-meal">' + (names.length ? esc(names.join(', ')) : 'Solids') + '</span>' +
-        (r ? '<em class="hb-rx hb-rx--' + r.toLowerCase() + '">' + REACTIONS[r] + '</em>' : '') + '</li>';
+        (r ? '<span class="hb-rx">' + emoji(r) + '</span>' : '') + '</li>';
     }).join('') : '<li class="hb-empty">No solids logged today</li>';
-    var foods = F.foods.length ? F.foods.slice(0, 30).map(function (f) {
-      return '<li class="hb-food' + (f.r ? ' hb-food--' + f.r.toLowerCase() : '') + '">' + esc(f.name) + (f.isNew ? '<b>New</b>' : '') + '</li>';
-    }).join('') : '<li class="hb-empty">Nothing tried in the last 30 days</li>';
+    function tile(x) {
+      var data = ' data-al="' + x.a.k + '"';
+      if (x.paused) {
+        return '<li class="hb-al hb-al--paused"' + data + '><span class="hb-al-n">' + x.a.label + '</span><b class="hb-al-v">Paused</b>' +
+          (x.start != null ? '<span class="hb-al-s">last ' + daysAgo(x.start).toLowerCase() + '</span>' : '') + '</li>';
+      }
+      return x.start == null
+        ? '<li class="hb-al hb-al--none"' + data + '><span class="hb-al-n">' + x.a.label + '</span><b class="hb-al-v">Not yet</b></li>'
+        : '<li class="hb-al' + (x.due ? ' hb-al--due' : '') + '"' + data + '><span class="hb-al-n">' + x.a.label + '<i class="hb-al-c">' + x.count7 + '/' + GOAL + '</i></span><b class="hb-al-v">' + daysAgo(x.start) + '</b><span class="hb-al-s">' + esc(x.food) + '</span></li>';
+    }
+    var model = allergenModel();
+    var al = model.filter(function (x) { return !x.a.nut; }).map(tile).join('') +
+      '<li class="hb-al-group">Tree nuts</li>' + model.filter(function (x) { return x.a.nut; }).map(tile).join('');
     return card('hb-solids', '#E4007C', '228 0 124', '#FFFFFF',
       head('utensils', 'Solid foods') +
       '<div class="hb-solids-body"><div class="hb-col"><div class="label">Today · ' + F.today.length + ' meal' + (F.today.length === 1 ? '' : 's') + '</div><ul class="hb-meals">' + meals + '</ul></div>' +
-      '<div class="hb-col"><div class="label">Foods tried · 30 days · ' + F.foods.length + (F.fresh ? ' · ' + F.fresh + ' new' : '') + '</div><ul class="hb-foods">' + foods + '</ul></div></div>', false);
+      '<div class="hb-col"><div class="label">Common allergens · last had · <span class="hb-key">amber = under ' + GOAL + '× in 7 days</span>' + (V.ever ? '' : ' · last 30 days only') + '</div><ul class="hb-allergens">' + al + '</ul></div></div>', false);
   }
-  function actCard() {
-    var rows = actModel(), anyOn = rows.some(function (r) { return r.on; });
-    var list = rows.map(function (r) {
-      var right;
-      if (r.on) right = r.paused ? '<span class="num">' + clock(r.fixed) + '</span>' : liveClock(r.t0);
-      else right = r.last ? ago(r.last) + ' ago' : '—';
-      return '<li class="' + (r.on ? 'is-on' : '') + '"><span class="hb-act-n">' + r.label + '</span>' +
-        '<span class="hb-act-today">' + (r.total ? dur(r.total) : '') + '</span><span class="hb-act-last">' + right + '</span></li>';
-    }).join('');
-    return card('hb-act', '#7A3FF2', '122 63 242', '#FFFFFF',
-      head('star', 'Activities', anyOn ? '<i></i>Live' : '') + '<div class="hb-act-cols"><span></span><span>Today</span><span>Last</span></div><ul class="hb-acts">' + list + '</ul>', false);
+  function openAllergenSheet(k) {
+    var x = allergenModel().filter(function (m) { return m.a.k === k; })[0];
+    if (!x) return;
+    function date(sec) { var d = new Date(sec * 1000); return App.fmt.monthShort(d) + ' ' + d.getDate(); }
+    var rows = x.start == null
+      ? '<p class="sheet-p">Never logged in Huckleberry.</p>'
+      : '<div class="al-facts">' +
+        '<div><small>Last had</small><b>' + daysAgo(x.start) + '</b><span>' + date(x.start) + ' · ' + esc(x.food) + '</span></div>' +
+        '<div><small>Last 7 days</small><b>' + x.count7 + ' of ' + GOAL + '</b><span>' + (x.paused ? 'paused' : x.due ? 'behind' : 'on track') + '</span></div>' +
+        '<div><small>All time</small><b>' + x.total + ' meal' + (x.total === 1 ? '' : 's') + '</b><span>first ' + date(x.first) + '</span></div></div>';
+    App.sheet('<div class="sheet-pad"><div class="label">Allergen' + (x.paused ? ' · paused' : '') + '</div><h2 class="serif sheet-h">' + esc(x.a.label) + '</h2>' + rows +
+      '<p class="sheet-p">' + (x.paused ? 'Paused allergens aren’t flagged as overdue and won’t be suggested.' : 'Pausing stops it being flagged as overdue and from being suggested next.') + '</p>' +
+      '<div class="sheet-actions"><button class="btn ' + (x.paused ? 'btn--solid' : 'btn--ghost') + '" data-alpause>' + (x.paused ? 'Resume ' : 'Pause ') + esc(x.a.label) + '</button></div></div>', {
+      onMount: function (sheet, close) {
+        sheet.querySelector('[data-alpause]').addEventListener('click', function () { setPaused(k, !x.paused); close(); render(); });
+      }
+    });
+  }
+
+  function nextCard() {
+    var model = allergenModel(), n = nextUp(model), p = n.pick, body;
+    if (!p) {
+      body = '<div class="hb-next-pick"><small>All caught up</small><b>Nothing overdue</b><p>Every allergen has been had ' + GOAL + '× this week.</p></div>';
+    } else {
+      var reason = n.fromDue
+        ? 'Last had ' + daysAgo(p.start).toLowerCase() + ' · ' + p.count7 + '/' + GOAL + ' this week'
+        : 'Not introduced yet';
+      body = '<div class="hb-next-pick"><small>Serve next</small><b>' + esc(p.a.label) + '</b><p>' + reason + '</p></div>';
+      if (!n.fromDue && n.justStarted) body += '<p class="hb-wait">' + esc(n.justStarted.a.label) + ' was only just introduced (' + daysAgo(n.justStarted.first).toLowerCase() + '). Waiting a couple of days before the next new one is usual.</p>';
+    }
+    var others = n.due.filter(function (x) { return x !== p; });
+    if (others.length) {
+      body += '<div class="label">Also behind this week</div><ul class="hb-due">' + others.map(function (x) {
+        return '<li><b>' + esc(x.a.label) + '</b><span>' + daysAgo(x.start) + ' · ' + x.count7 + '/' + GOAL + '</span></li>';
+      }).join('') + '</ul>';
+    }
+    var rest = n.never.filter(function (x) { return x !== p; });
+    if (rest.length) body += '<div class="label">Not introduced yet</div><p class="hb-never">' + rest.map(function (x) { return esc(x.a.label); }).join(', ') + '</p>';
+    if (n.paused.length) body += '<div class="label">Paused · not suggested</div><p class="hb-never">' + n.paused.map(function (x) { return esc(x.a.label); }).join(', ') + '</p>';
+    body += '<p class="hb-note">One new allergen at a time — check with your pediatrician.</p>';
+    return card('hb-next', '#00A36C', '0 163 108', '#FFFFFF', head('star', 'Next allergen') + '<div class="hb-next-body">' + body + '</div>', false);
   }
 
   function topbar() {
@@ -251,16 +353,19 @@
         ? messageView('Can’t load', esc(V.err), '<button class="btn btn--solid" data-refresh>Try again</button>' + '<button class="hb-out" data-signout>Sign out</button>')
         : messageView('Loading…', 'Fetching from Huckleberry', '');
     } else {
-      html = '<div class="hb">' + topbar() + '<div class="hb-grid">' + sleepCard() + feedCard() + diaperCard() + solidsCard() + actCard() + '</div></div>';
+      html = '<div class="hb">' + topbar() + '<div class="hb-grid">' + sleepCard() + feedCard() + diaperCard() + solidsCard() + nextCard() + '</div></div>';
     }
     // keep typed text if we re-render the login form mid-typing
+    var keep = {};
+    ['.hb-allergens', '.hb-meals'].forEach(function (sel) { var n = el.querySelector(sel); if (n) keep[sel] = n.scrollTop; });
     el.innerHTML = html;
+    Object.keys(keep).forEach(function (sel) { var n = el.querySelector(sel); if (n) n.scrollTop = keep[sel]; });
   }
 
   // ------------------------------------------------------------ data flow
   function fail(e) {
     V.busy = false;
-    if (e && e.auth) { V.status = 'out'; V.loginErr = H.errorText(e); V.live = V.hist = null; render(); return; }
+    if (e && e.auth) { V.status = 'out'; V.loginErr = H.errorText(e); V.live = V.hist = V.ever = null; render(); return; }
     V.err = H.errorText(e);
     if (!V.live) V.status = 'error';
     render();
@@ -279,11 +384,13 @@
         V.cid = list.some(function (k) { return k.cid === saved; }) ? saved : list[0].cid;
       }
       var cid = V.cid, needHist = full || !V.hist || Date.now() - V.histAt > HIST_EVERY * 1000;
-      return Promise.all([H.live(cid), needHist ? H.history(cid) : null]).then(function (r) {
+      var needEver = !V.ever || Date.now() - V.everAt > 30 * 60 * 1000;
+      return Promise.all([H.live(cid), needHist ? H.history(cid) : null, needEver ? H.solidsEver(cid).catch(function () { return null; }) : null]).then(function (r) {
         if (cid !== V.cid) return; // switched child while loading
         V.live = r[0];
         V.liveAt = Date.now();
         if (r[1]) { V.hist = r[1]; V.histAt = Date.now(); }
+        if (r[2]) { V.ever = r[2]; V.everAt = Date.now(); }
         V.err = ''; V.status = 'ready'; V.busy = false;
         render();
       });
@@ -320,7 +427,7 @@
       V.submitting = true; V.loginErr = '';
       render();
       H.signIn(email, pw).then(function () {
-        V.submitting = false; V.kids = []; V.cid = null; V.live = V.hist = null;
+        V.submitting = false; V.kids = []; V.cid = null; V.live = V.hist = V.ever = null;
         boot();
       }, function (err) {
         V.submitting = false; V.loginErr = H.errorText(err);
@@ -328,14 +435,16 @@
       });
     });
     el.addEventListener('click', function (e) {
+      var al = e.target.closest('[data-al]');
+      if (al) return openAllergenSheet(al.dataset.al);
       var t = e.target.closest('[data-refresh],[data-signout],[data-child]');
       if (!t) return;
       if (t.hasAttribute('data-signout')) {
         H.signOut();
-        V.kids = []; V.cid = null; V.live = V.hist = null; V.status = 'out'; V.loginErr = ''; V.err = '';
+        V.kids = []; V.cid = null; V.live = V.hist = V.ever = null; V.status = 'out'; V.loginErr = ''; V.err = '';
         render();
       } else if (t.hasAttribute('data-child')) {
-        V.cid = t.dataset.child; V.live = V.hist = null; V.status = 'loading';
+        V.cid = t.dataset.child; V.live = V.hist = V.ever = null; V.status = 'loading';
         try { localStorage.setItem(CKEY, V.cid); } catch (x) { /* ignore */ }
         V.busy = false;
         render();
