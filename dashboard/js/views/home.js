@@ -11,30 +11,62 @@
 
   function weather() {
     var w = App.weatherNow();
-    var hours = App.hourly(7);
-    var tmin = Math.min.apply(null, hours.map(function (h) { return h.t; }));
-    var tmax = Math.max.apply(null, hours.map(function (h) { return h.t; }));
+    if (!w) {
+      var err = D.weather.error;
+      return '<div class="label">Weather</div><p class="h-w-note">' + (err ? 'Weather unavailable · ' + App.esc(err) : 'Loading…') + '</p>';
+    }
+    var days = App.daily(7);
     return '<div class="h-wx-top">' +
       '<span class="h-wx-icon">' + App.icon(w.cond, 60) + '</span>' +
       '<span class="h-wx-temp num">' + w.temp + '°</span>' +
       '<span class="h-wx-meta"><b>' + w.label + '</b><span>H ' + w.hi + '°  L ' + w.lo + '°</span></span>' +
       '</div>' +
       '<div class="h-wx-say"><b>' + w.summary + '.</b> ' + w.advice + '.</div>' +
-      '<div class="h-wx-hours">' + hours.map(function (h) {
-        var lift = tmax === tmin ? 0 : Math.round((h.t - tmin) / (tmax - tmin) * 8);
-        return '<div class="h-hr' + (h.p >= 50 ? ' is-wet' : '') + '"><span class="h-hr-l">' + h.label + '</span>' +
-          '<span class="h-hr-i" style="transform:translateY(' + -lift + 'px)">' + App.icon(h.c, 22) + '</span><b>' + h.t + '°</b></div>';
+      '<div class="h-wx-hours">' + days.map(function (d) {
+        return '<div class="h-hr' + (d.p >= 50 ? ' is-wet' : '') + '"><span class="h-hr-l">' + d.label + '</span>' +
+          '<span class="h-hr-i">' + App.icon(d.c, 24) + '</span><b>' + d.hi + '°</b><span class="h-hr-lo">' + d.lo + '°</span></div>';
       }).join('') + '</div>';
   }
 
-  function presence() {
-    return D.people.map(function (p) {
-      var sub = p.home ? 'Home' : (p.eta ? '<b>ETA ' + p.eta + ' min</b>' : p.status);
-      return '<div class="h-who' + (p.home ? ' is-home' : '') + '" style="' + App.pstyle(p) + '">' +
-        App.avatar(p, 36, p.home ? '' : 'avatar--away') +
-        '<span><b>' + p.name + '</b><small>' + sub + '</small></span></div>';
-    }).join('');
+  // ------------------------------------------------------------ bath night (from Huckleberry; every 3 days)
+  var BATH_EVERY = 3;
+  var B = { at: null, status: 'init', busy: false, tried: 0, cid: null }; // status: init | out | ready | error
+  function bathDays() {
+    var now = new Date(Date.now() + (window.Huck ? window.Huck.skew : 0));
+    return Math.max(0, Math.round((App.dayStart(now) - App.dayStart(new Date(B.at * 1000))) / 864e5));
   }
+  function bath() {
+    var head = '<div class="h-bath-h"><span class="label">Bath night</span>' + App.icon('bath', 40) + '</div>';
+    if (!window.Huck || !window.Huck.signedIn()) return head + '<p class="h-w-note">Huckleberry isn’t connected</p>';
+    if (B.status === 'error' && B.at == null) return head + '<p class="h-w-note">Can’t reach Huckleberry</p>';
+    if (B.status !== 'ready') return head + '<p class="h-w-note">Loading…</p>';
+    if (B.at == null) return head + '<p class="h-w-note">No bath logged yet</p>';
+    var d = bathDays(), left = BATH_EVERY - d;
+    var next = App.addDays(App.dayStart(new Date(B.at * 1000)), BATH_EVERY);
+    var tone = left < 0 ? ' is-over' : left === 0 ? ' is-due' : '';
+    var line = left > 0 ? left === 1 ? 'Due tomorrow' : 'Due ' + App.fmt.dayShort(next) + ' · ' + left + ' days'
+      : left === 0 ? 'Bath night today' : 'Overdue by ' + -left + (left === -1 ? ' day' : ' days');
+    var pips = '';
+    for (var i = 0; i < BATH_EVERY; i++) pips += '<i' + (i < d ? ' class="on"' : '') + '></i>';
+    return '<div class="h-bath-in' + tone + '">' + head +
+      '<div class="h-bath-big serif">' + (d === 0 ? 'Today' : d === 1 ? 'Yesterday' : d + ' days ago') + '</div>' +
+      '<div class="h-bath-line"><span class="h-bath-pips">' + pips + '</span>' + line + '</div></div>';
+  }
+  function loadBath() {
+    var H = window.Huck;
+    if (!H || !H.signedIn() || B.busy) return paintBath();
+    B.busy = true; B.tried = Date.now();
+    var kid = B.cid ? Promise.resolve(B.cid) : H.children().then(function (list) {
+      var saved = null;
+      try { saved = localStorage.getItem('hb.child'); } catch (e) { /* ignore */ }
+      if (!list.length) throw new Error('No children');
+      return (list.filter(function (k) { return k.cid === saved; })[0] || list[0]).cid;
+    });
+    kid.then(function (cid) { B.cid = cid; return H.lastBath(cid); }).then(function (at) {
+      B.at = at; B.status = 'ready'; B.busy = false; paintBath();
+    }).catch(function () { B.status = 'error'; B.busy = false; paintBath(); });
+  }
+  function paintBath() { if (V.el && V.el.firstChild) V.el.querySelector('.h-bath').innerHTML = bath(); }
 
   function hero() {
     var e = App.nextEvent(), now = App.now();
@@ -49,8 +81,6 @@
     var p = App.evColor(e);
     var mins = (e.start - now) / 60000;
     var leave = (App.leaveBy(e) - now) / 60000;
-    var who = e.people.map(function (id) { return App.person(id).name; });
-    var whoText = App.isFamily(e) ? 'Everyone' : who.join(' + ');
     var big = mins < 100
       ? '<div class="h-hero-count num">' + Math.round(mins) + '<small>min</small></div>'
       : '<div class="h-hero-count num">' + App.fmt.time(e.start, false) + '<small>' + App.fmt.ampm(e.start) + '</small></div>';
@@ -62,50 +92,77 @@
     }
     return '<button class="h-hero" style="' + App.pstyle(p) + '" data-ev="' + e.id + '">' +
       '<div class="h-hero-main">' +
-      '  <div class="label label--on">Next up · ' + App.esc(whoText) + '</div>' +
+      '  <div class="label label--on">Next up</div>' +
       '  <div class="h-hero-title serif">' + App.esc(e.title) + '</div>' +
       '  <div class="h-hero-meta">' + App.fmt.range(e.start, e.end) + (e.loc ? ' · ' + App.esc(e.loc) : '') + '</div>' +
-      '  <div class="h-hero-foot">' + (e.people.length > 1 ? App.dots(e.people, 22) : '') + leavePill + '</div>' +
+      '  <div class="h-hero-foot">' + leavePill + '</div>' +
       '</div>' + big + '</button>';
   }
 
   function lanes() {
     var now = App.now();
-    return D.people.map(function (p) {
-      var list = App.timedOn(now, p.id).filter(function (e) { return e.end > now; });
-      var shown = list.slice(0, 3), more = list.length - shown.length;
-      return '<div class="h-lane" style="' + App.pstyle(p) + '">' +
-        '<div class="h-lane-head">' + App.avatar(p, 30) + '<b>' + p.name + '</b></div>' +
-        (list.length ? shown.map(function (e) {
-          var cur = e.start <= now;
-          return '<button class="h-ev' + (cur ? ' is-now' : '') + '" data-ev="' + e.id + '">' +
-            '<span class="h-ev-t">' + (cur ? 'Now' : App.fmt.time(e.start, false)) + '</span>' +
-            '<span class="h-ev-n">' + App.esc(e.title) + '</span></button>';
-        }).join('') : '<div class="h-free serif"><i>Free</i> the rest of the day</div>') +
-        (more > 0 ? '<button class="h-more" data-go="calendar">+' + more + ' more</button>' : '') +
-        '</div>';
-    }).join('');
+    var list = App.timedOn(now).filter(function (e) { return e.end > now; });
+    var shown = list.slice(0, list.length > 6 ? 5 : 6), more = list.length - shown.length;
+    return '<div class="label h-up-h">Coming up today</div>' +
+      (list.length ? '<div class="h-up">' + shown.map(function (e) {
+        var cur = e.start <= now;
+        return '<button class="h-ev' + (cur ? ' is-now' : '') + '" data-ev="' + e.id + '" style="' + App.pstyle(App.evColor(e)) + '">' +
+          '<span class="h-ev-t">' + (cur ? 'Now' : App.fmt.time(e.start, false)) + '</span>' +
+          '<span class="h-ev-n">' + App.esc(e.title) + '</span></button>';
+      }).join('') + (more > 0 ? '<button class="h-more" data-go="calendar">+' + more + ' more</button>' : '') + '</div>'
+        : '<div class="h-free serif">Nothing else planned today</div>');
   }
 
-  function ring(done, total, size) {
-    var r = size / 2 - 5, c = 2 * Math.PI * r, f = total ? done / total : 0;
-    return '<svg class="ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' +
-      '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" class="ring-bg"/>' +
-      '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" class="ring-fg" stroke-dasharray="' + (c * f) + ' ' + c + '" transform="rotate(-90 ' + size / 2 + ' ' + size / 2 + ')"/></svg>';
+  // ------------------------------------------------------------ curbside collection (City of Toronto)
+  var W = { data: null, error: '' };
+  // [key, label, picture, accent colour, rgb]
+  var BINS = [
+    ['garbage', 'Garbage', '/bins/garbage.png', '#3B3934', '59 57 52'],
+    ['recycling', 'Recycling', '/bins/recycling.png', '#1F6FEB', '31 111 235'],
+    ['greenBin', 'Green bin', '/bins/green-bin.png', '#2E9E4F', '46 158 79'],
+    ['yardWaste', 'Yard waste', '/bins/yard-waste.png', '#8C5A2B', '140 90 43'],
+    ['christmasTree', 'Tree', null, '#C0392B', '192 57 43']
+  ];
+  function localISO(d) { return d.getFullYear() + '-' + (d.getMonth() < 9 ? '0' : '') + (d.getMonth() + 1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate(); }
+  function isoToDate(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function daysFromToday(d) { return Math.round((App.dayStart(d) - App.dayStart(App.now())) / 864e5); }
+  function when(d) {
+    var diff = daysFromToday(d);
+    return diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : App.fmt.dayShort(d);
   }
-  App.ring = ring;
-
-  function chores() {
-    var r = App.currentRoutine();
-    var who = D.people.map(function (p) { return p.id; }).concat(['any']);
-    return '<div class="label">Chores · ' + r.name + '</div><div class="h-rings">' + who.map(function (id) {
-      var list = D.chores.filter(function (c) { return c.r === r.id && c.who === id; });
-      if (!list.length) return '';
-      var done = list.filter(function (c) { return c.done; }).length;
-      var p = App.person(id);
-      return '<div class="h-ring' + (done === list.length ? ' is-done' : '') + '" style="' + App.pstyle(p) + '">' + ring(done, list.length, 64) +
-        '<b class="num">' + (done === list.length ? '✓' : done + '/' + list.length) + '</b><span>' + (id === 'any' ? 'Anyone' : p.name) + '</span></div>';
+  // first pickup of a stream on/after `from` (ISO date), optionally no later than `to`
+  function pickupIn(list, from, to) {
+    for (var i = 0; i < (list || []).length; i++) if (list[i] >= from && (!to || list[i] <= to)) return isoToDate(list[i]);
+    return null;
+  }
+  function waste() {
+    var d = W.data;
+    if (!d) return '<div class="label">Collection</div><p class="h-w-note">' + (W.error ? 'Schedule unavailable · ' + App.esc(W.error) : 'Loading…') + '</p>';
+    if (!d.configured) return '<div class="label">Collection</div><p class="h-w-note">Not set up yet</p>';
+    var now = App.now(), today = localISO(now);
+    var sunday = localISO(App.addDays(App.dayStart(now), (7 - now.getDay()) % 7)); // end of this Monday–Sunday week
+    // only what's still to come this week (today counts)
+    var items = BINS.map(function (b) { return { b: b, date: pickupIn(d.pickups[b[0]], today, sunday) }; })
+      .filter(function (x) { return x.date; })
+      .sort(function (x, y) { return x.date - y.date; });
+    var head = '<div class="label">Collection · ' + App.esc(d.calendar.replace(/(\d)$/, ' · wk $1')) + '</div>';
+    if (!items.length) {
+      var up = BINS.map(function (b) { return { b: b, date: pickupIn(d.pickups[b[0]], today) }; })
+        .filter(function (x) { return x.date; }).sort(function (x, y) { return x.date - y.date; })[0];
+      return head + '<p class="h-w-note"><b>Nothing else this week.</b>' + (up ? ' Next: ' + up.b[1] + ' · ' + App.fmt.dayShort(up.date) + ' ' + App.fmt.monthShort(up.date) + ' ' + up.date.getDate() + '.' : ' No more pickups listed for ' + d.years[d.years.length - 1] + ' — next year’s schedule isn’t published yet.') + '</p>';
+    }
+    return head + '<div class="h-bins" style="--n:' + items.length + '">' + items.map(function (x) {
+      var soon = daysFromToday(x.date) <= 1;
+      return '<div class="h-bin' + (soon ? ' is-soon' : '') + '" style="--c:' + x.b[3] + ';--c-rgb:' + x.b[4] + '">' +
+        (x.b[2] ? '<img src="' + x.b[2] + '" alt="">' : '<span class="h-bin-e">🎄</span>') +
+        '<b>' + when(x.date) + '</b><span>' + x.b[1] + ' · ' + App.fmt.monthShort(x.date) + ' ' + x.date.getDate() + '</span></div>';
     }).join('') + '</div>';
+  }
+  function loadWaste() {
+    fetch('/api/waste').then(function (r) { return r.json(); }).then(function (d) {
+      W.data = d.error ? (W.data || null) : d; W.error = d.error || '';
+      if (V.el && V.el.firstChild) V.el.querySelector('.h-waste').innerHTML = waste();
+    }).catch(function () { W.error = 'server unreachable'; if (V.el && V.el.firstChild && !W.data) V.el.querySelector('.h-waste').innerHTML = waste(); });
   }
 
   function shopping() {
@@ -119,32 +176,22 @@
   }
 
   function status() {
-    var lights = D.devices.filter(function (d) { return d.type === 'light' && d.on; }).length;
-    var unlocked = D.devices.filter(function (d) { return d.type === 'lock' && !d.locked; });
-    var garage = D.devices.filter(function (d) { return d.type === 'garage'; })[0];
-    var secure = !unlocked.length && garage.state === 'closed';
-    var secText = secure ? 'All locked' : (garage.state !== 'closed' ? 'Garage open' : unlocked[0].name + ' unlocked');
-    return '<div class="label">Home</div>' +
-      '<div class="h-st-row">' + App.icon('bulb', 24) + '<b class="num">' + lights + '</b><span>lights on</span></div>' +
-      '<div class="h-st-row' + (secure ? '' : ' is-warn') + '">' + App.icon(secure ? 'lock' : 'unlock', 24) + '<span>' + secText + '</span></div>' +
-      (D.climate.live ? '<div class="h-st-row">' + App.icon('thermo', 24) + '<b class="num">' + App.deg(D.climate.current) + '°</b><span>inside</span></div>' : '');
+    var c = D.climate;
+    return '<div class="label">Home</div>' + (c.live
+      ? '<div class="h-st-row">' + App.icon('thermo', 24) + '<b class="num">' + App.deg(c.current) + '°</b><span>inside' + (c.mode !== 'off' && !c.eco ? ' · ' + (c.hvac === 'HEATING' ? 'heating' : c.hvac === 'COOLING' ? 'cooling' : 'holding') : '') + '</span></div>'
+      : '<div class="h-st-row is-muted"><span>Thermostat not connected</span></div>');
   }
 
   function paint() {
     var el = V.el;
     el.querySelector('.h-clock').innerHTML = clock();
     el.querySelector('.h-weather').innerHTML = weather();
-    el.querySelector('.h-presence').innerHTML = presence();
+    el.querySelector('.h-bath').innerHTML = bath();
     el.querySelector('.h-hero-slot').innerHTML = hero();
     el.querySelector('.h-lanes').innerHTML = lanes();
-    el.querySelector('.h-chores').innerHTML = chores();
+    el.querySelector('.h-waste').innerHTML = waste();
     el.querySelector('.h-shop').innerHTML = shopping();
     el.querySelector('.h-status').innerHTML = status();
-  }
-
-  function photoCaption(s) {
-    var m = App.photoMeta(s.photos[0]);
-    V.el.querySelector('.h-photo-cap').innerHTML = '<b>' + (m.onThisDay ? 'On this day · ' : '') + m.kicker + '</b><span>' + App.esc(m.place) + '</span>';
   }
 
   App.register('home', {
@@ -154,11 +201,10 @@
         el.innerHTML = '<div class="home">' +
           '<div class="h-clock" data-go="calendar"></div>' +
           '<div class="h-weather"></div>' +
-          '<div class="h-presence"></div>' +
+          '<div class="h-bath"></div>' +
           '<div class="h-main"><div class="h-hero-slot"></div><div class="h-lanes" ></div></div>' +
           '<div class="h-side">' +
-          '  <button class="h-photo"><div class="h-photo-stage"></div><div class="h-photo-cap"></div></button>' +
-          '  <button class="h-chores card" data-go="tasks"></button>' +
+          '  <div class="h-waste card"></div>' +
           '  <div class="h-duo"><button class="h-shop card" data-go="shopping"></button><button class="h-status card" data-go="control"></button></div>' +
           '</div></div>';
         el.addEventListener('click', function (e) {
@@ -167,20 +213,20 @@
           var g = e.target.closest('[data-go]');
           if (g) App.go(g.dataset.go);
         });
-        V.slides = new App.Slideshow(el.querySelector('.h-photo-stage'), { layout: 'cover', captions: false, interval: 12000, onChange: photoCaption });
       }
       paint();
-      V.slides.start();
-    },
-    resume: function () { V.slides.start(); },
-    hide: function () { if (V.slides) V.slides.stop(); }
+      if (Date.now() - B.tried > 5 * 60 * 1000) loadBath();
+      if (!V.wasteTimer) { loadWaste(); V.wasteTimer = setInterval(loadWaste, 6 * 3600 * 1000); }
+    }
   });
   // Every minute: just the clock and next-up countdown (cheap, even while hidden). Weather on the hour.
   App.on('minute', function (n) {
     if (!V.el || !V.el.firstChild) return;
     V.el.querySelector('.h-clock').innerHTML = clock();
     V.el.querySelector('.h-hero-slot').innerHTML = hero();
-    if (n.getMinutes() === 0) { V.el.querySelector('.h-weather').innerHTML = weather(); V.el.querySelector('.h-lanes').innerHTML = lanes(); }
+    paintBath();
+    if (n.getMinutes() % 10 === 0 && Date.now() - B.tried > 5 * 60 * 1000) loadBath();
+    if (n.getMinutes() === 0) { V.el.querySelector('.h-waste').innerHTML = waste(); V.el.querySelector('.h-weather').innerHTML = weather(); V.el.querySelector('.h-lanes').innerHTML = lanes(); }
   });
   App.on('data', function () { if (App.current === 'home') paint(); });
 })();
