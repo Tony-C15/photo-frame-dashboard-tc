@@ -216,7 +216,7 @@
     } else { main = '<span class="num">—</span>'; sub = 'No sleep logged yet'; }
     return card('hb-sleep', '#2D5BFF', '45 91 255', '#FFFFFF',
       head('moon', 'Sleep', badge) + '<div class="hb-big">' + main + '</div><p class="hb-sub">' + sub + '</p>' +
-      '<footer class="hb-foot">' + stat(dur(m.total), 'slept today') + stat(m.naps + (m.on ? 1 : 0), 'sessions') + '</footer>', m.on);
+      '<footer class="hb-foot">' + stat(dur(m.total), 'slept today') + '</footer>', m.on);
   }
   function feedCard() {
     var m = feedModel(), main, sub, badge = '';
