@@ -78,6 +78,14 @@
 .h-ev-n::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-right: var(--space-2); vertical-align: 1px; }
 .h-ev.is-now { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--plum); }
 .h-ev.is-now .h-ev-t { color: var(--plum); font-weight: 600; }
+.h-allday { display: flex; flex-wrap: nowrap; gap: var(--space-2); }
+.h-ad {
+  min-height: var(--touch-min); min-width: 0; flex: 0 1 auto; padding: 0 var(--space-3); border-radius: var(--radius-md);
+  display: flex; align-items: center; gap: var(--space-2);
+  background: var(--c-soft); color: var(--ink); text-align: left;
+  font-size: var(--fs-event); line-height: var(--lh-event); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.h-ad::before { content: ''; flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
 .h-free { font-size: var(--fs-body); color: var(--ink-muted); padding: 6px 2px; line-height: var(--lh-body); }
 .h-more { min-height: var(--touch-min); align-self: center; font-size: var(--fs-button); font-weight: 600; color: var(--plum); text-align: left; padding: 0 var(--space-3); }
 

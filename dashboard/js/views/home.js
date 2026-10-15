@@ -106,9 +106,16 @@
 
   function lanes() {
     var now = App.now();
+    var allDay = App.allDayOn(now), adShown = allDay.slice(0, 3), adMore = allDay.length - adShown.length;
     var list = App.timedOn(now).filter(function (e) { return e.end > now; });
-    var shown = list.slice(0, list.length > 6 ? 5 : 6), more = list.length - shown.length;
-    return '<div class="label h-up-h">Coming up today</div>' +
+    var room = allDay.length ? 4 : 6; // the all-day row takes the space of two timed events
+    var shown = list.slice(0, list.length > room ? room - 1 : room), more = list.length - shown.length;
+    var ad = '<div class="label h-up-h">All day</div>' + (allDay.length
+      ? '<div class="h-allday">' + adShown.map(function (e) {
+        return '<button class="h-ad" data-ev="' + e.id + '" style="' + App.pstyle(App.evColor(e)) + '">' + App.esc(e.title) + '</button>';
+      }).join('') + (adMore > 0 ? '<button class="h-more" data-go="calendar">+' + adMore + ' more</button>' : '') + '</div>'
+      : '<div class="h-free">Nothing all day</div>');
+    return ad + '<div class="label h-up-h">Coming up today</div>' +
       (list.length ? '<div class="h-up">' + shown.map(function (e) {
         var cur = e.start <= now;
         return '<button class="h-ev' + (cur ? ' is-now' : '') + '" data-ev="' + e.id + '" style="' + App.pstyle(App.evColor(e)) + '">' +
