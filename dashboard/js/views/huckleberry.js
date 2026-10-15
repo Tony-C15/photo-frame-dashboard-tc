@@ -153,7 +153,8 @@
   // ("peanut butter" is not dairy, "coconut milk" is not milk, "rice noodles" are not wheat).
   var ALLERGENS = [
     { k: 'milk', label: 'Milk', re: /\b(milk|yogh?urt|cheese|cheddar|mozzarella|parmesan|ricotta|cream|butter|kefir|custard|dairy|paneer|ghee|whey)\b/i, skip: /\b(coconut|almond|oat|soy|rice|cashew|nut|peanut|seed|apple|cocoa)\s+(milk|butter)\b|\bbutternut\b/ig },
-    { k: 'egg', label: 'Egg', re: /\b(eggs?|omelet+e?|frittata|mayo|mayonnaise|meringue|quiche)\b/i },
+    { k: 'egg', label: 'Egg', // baked goods count as egg too: they're made with it
+    re: /\b(eggs?|omelet+e?|frittata|mayo|mayonnaise|meringue|quiche|custard|muffins?|cupcakes?|cakes?|cookies?|brownies?|pancakes?|waffles?|french toast|doughnuts?|donuts?|croissants?|brioche|challah|scones?|pastry|pastries|banana bread|cornbread)\b/i },
     { k: 'peanut', label: 'Peanut', re: /\b(peanuts?|groundnuts?)\b/i },
     { k: 'wheat', label: 'Wheat', re: /\b(wheat|bread|toast|pasta|noodles?|spaghetti|macaroni|couscous|flour|pancakes?|waffles?|muffins?|biscuits?|bagels?|tortillas?|udon|ramen|cookies?|cake|pizza|baguette|croissant)\b/i, skip: /\b(rice|glass|mung|sweet potato)\s+noodles?\b/ig },
     { k: 'soy', label: 'Soy', re: /\b(soy|soya|soybeans?|tofu|edamame|miso|tempeh|natto)\b/i },
