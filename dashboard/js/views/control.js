@@ -62,7 +62,7 @@
       '<h2 class="serif sheet-h">' + (f.on ? 'Fan is on · ' + fanText(f) : 'Run the fan for…') + '</h2>' +
       '<div class="fan-grid">' + FAN_OPTIONS.map(function (o) { return '<button class="fan-opt" data-fanmin="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div>' +
       (f.on ? '<div class="sheet-actions"><button class="btn btn--solid" data-fanoff>Turn fan off</button></div>' : '') +
-      '<p class="sheet-p">The fan runs for the time you pick, then stops. Google’s API doesn’t offer an “always on” setting.</p></div>', {
+      '</div>', {
       onMount: function (sheet, close) {
         sheet.addEventListener('click', function (e) {
           var t = e.target.closest('button');
