@@ -11,11 +11,11 @@
 
 .hb-grid {
   flex: 1; min-height: 0;
-  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 236px 1fr; gap: 14px;
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: 268px 1fr; gap: var(--space-3);
 }
 .hb-card {
-  background: var(--surface); border-radius: var(--radius-lg); padding: 16px 18px 14px;
-  display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: hidden;
+  background: var(--surface); border-radius: var(--radius-lg); padding: var(--space-4);
+  display: flex; flex-direction: column; gap: var(--space-2); min-height: 0; overflow: hidden;
 }
 .hb-sleep { --c: var(--member-lilac); --c-soft: var(--member-lilac-soft); }
 .hb-feed { --c: var(--member-apricot); --c-soft: var(--member-apricot-soft); }
@@ -33,14 +33,14 @@
 .hb-badge i { width: 9px; height: 9px; border-radius: 50%; background: currentColor; animation: hb-pulse 1.4s ease-in-out infinite; }
 @keyframes hb-pulse { 50% { opacity: .25; } }
 
-.hb-big { font-size: 72px; line-height: .95; margin-top: 4px; white-space: nowrap; }
+.hb-big { font-size: 52px; line-height: 62px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hb-big .num { font-size: inherit; }
-.hb-sub { font-size: 17px; font-weight: 600; color: var(--ink-muted); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hb-sub { font-size: 17px; font-weight: 600; color: var(--ink-muted); line-height: 21px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: var(--fs-meta); }
 .is-live .hb-sub { color: inherit; opacity: .85; }
-.hb-foot { margin-top: auto; display: flex; gap: 22px; padding-top: 10px; border-top: 1px solid var(--line); }
+.hb-foot { margin-top: auto; display: flex; gap: var(--space-4); padding-top: 10px; border-top: 1px solid var(--line); }
 .is-live .hb-foot { border-top-color: var(--line); }
 .hb-foot > div { display: flex; flex-direction: column; }
-.hb-foot .num { font-size: 30px; line-height: .9; }
+.hb-foot .num { font-size: 26px; line-height: 32px; }
 .hb-foot small { font-size: 13px; font-weight: 600; color: var(--ink-muted); margin-top: 3px; white-space: nowrap; }
 .is-live .hb-foot small { color: inherit; opacity: .75; }
 
@@ -69,11 +69,11 @@
 .hb-login-card .btn[disabled] { opacity: .5; }
 
 /* common allergens: last time each was eaten */
-.hb-allergens { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; align-content: start; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; }
-.hb-al { min-width: 0; overflow: hidden; min-height: 54px; padding: 5px 9px; border-radius: 12px; border: 2px solid var(--line-strong); display: flex; flex-direction: column; justify-content: center; gap: 0; }
+.hb-allergens { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-content: start; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; }
+.hb-al { min-width: 0; overflow: hidden; min-height: 58px; padding: 5px 9px; border-radius: 12px; border: 2px solid var(--line-strong); display: flex; flex-direction: column; justify-content: center; gap: 0; }
 .hb-al-n { font-size: 13px; font-weight: 600; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hb-al-v { font-size: 16px; font-weight: 600; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hb-al-s { font-size: 13px; font-weight: 600; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hb-al-s { font-size: 13px; line-height: 16px; font-weight: 600; color: var(--ink-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .hb-al--none { border-style: dashed; background: none; }
 .hb-al--none .hb-al-v { color: var(--ink-muted); }
 .hb-al-group { grid-column: 1 / -1; margin-top: 4px; padding-bottom: 2px; line-height: 1.1; font-size: 13px; font-weight: 600; color: var(--ink-muted); border-bottom: 1px solid var(--line); }
