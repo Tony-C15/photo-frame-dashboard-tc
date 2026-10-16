@@ -226,11 +226,11 @@
       }).join('') + '</ul>';
   }
 
-  // Thermostat card: the compact pill (inside › target). Tapping it opens the full card on the Home tab.
+  // Thermostat tile: read-only; tapping it opens the full thermostat in a sheet (App.thermostatSheet).
   function status() {
     var c = D.climate;
-    if (!c.live) return '<div class="label">Home</div><div class="h-st-row is-muted"><span>Thermostat not connected</span></div>';
-    return '<div class="label">Home</div><div class="h-st-pills">' + App.thermostat.compact() + '</div>';
+    if (!c.live) return '<div class="card"><div class="label">Home</div><div class="h-st-row is-muted"><span>Thermostat not connected</span></div></div>';
+    return App.thermostat.tile();
   }
 
   function paint() {
@@ -255,7 +255,7 @@
           '<div class="h-weather" data-go="weather"></div>' +
           '<div class="h-bath"></div>' +
           '<div class="h-main"><div class="h-hero-slot"></div><div class="h-low"><div class="h-lanes"></div>' +
-          '  <div class="h-pair"><button class="h-shop card" data-go="shopping"></button><div class="h-status card"></div></div></div></div>' +
+          '  <div class="h-pair"><button class="h-shop card" data-go="shopping"></button><div class="h-status"></div></div></div></div>' +
           '<div class="h-side">' +
           '  <div class="h-waste card"></div>' +
           '  <button class="h-clinic card" data-clinic></button>' +
@@ -264,6 +264,7 @@
           var ev = e.target.closest('[data-ev]');
           if (ev) { App.eventSheet(App.findEvent(ev.dataset.ev)); return; }
           if (e.target.closest('[data-clinic]')) { loadClinic(); return; }
+          if (e.target.closest('[data-thermo]')) { App.thermostatSheet(); return; }
           var g = e.target.closest('[data-go]');
           if (g) App.go(g.dataset.go);
         });

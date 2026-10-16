@@ -28,7 +28,7 @@
     var c = D.climate;
     if (!c.live || !c.fan) return;
     c.fan = { on: on, until: on ? Date.now() + minutes * 60000 : 0 };
-    paintPart('.hc-climate', climate());
+    paintClimate();
     App.nest.command(c.id, 'sdm.devices.commands.Fan.SetTimer', on ? { timerMode: 'ON', duration: minutes * 60 + 's' } : { timerMode: 'OFF' })
       .then(function () { setTimeout(function () { App.nest.load(true); }, 3000); }, function (err) {
         App.toast(err.message === 'rate limited' ? 'Nest is rate-limiting changes · try again in a minute' : 'Couldn’t reach the thermostat', { tone: 'error', icon: 'bolt' });
@@ -292,6 +292,8 @@
 
   // Granular updates: an action repaints only what it touched (full paint() rebuilds ~270 nodes,
   // which costs ~350ms on the wall tablet).
+  // the Home tab's card, and the sheet opened from the Today tile, show the same thermostat
+  function paintClimate() { paintPart('.hc-climate', climate()); if (V.sheet) V.sheet.innerHTML = climate(); }
   function paintPart(sel, html) { if (V.el) V.el.querySelector(sel).innerHTML = html; }
 
   function onClick(e) {
@@ -389,7 +391,7 @@
     climateChanged();
     schedule(1200);
   }
-  function climateChanged() { paintPart('.hc-climate', climate()); App.emit('data'); }
+  function climateChanged() { paintClimate(); App.emit('data'); }
   var LIVE = 'sdm.devices.commands.CameraLiveStream.';
   function waitIce(pc, ms) {
     return new Promise(function (resolve) {
@@ -448,11 +450,22 @@
     });
   };
 
-  App.on('minute', function () { if (V.el && V.el.firstChild && D.climate.fan && D.climate.fan.on) paintPart('.hc-climate', climate()); });
+  App.on('minute', function () { if ((V.sheet || (V.el && V.el.firstChild)) && D.climate.fan && D.climate.fan.on) paintClimate(); });
+
+  // The full thermostat in a sheet, opened from the Today tile. Same card, same handlers as the Home tab.
+  App.thermostatSheet = function () {
+    if (!D.climate.live) return;
+    App.sheet('<div class="sheet-thermo">' + climate() + '</div>', {
+      cls: 'sheet--thermo',
+      onMount: function (sheet) { V.sheet = sheet.querySelector('.sheet-thermo'); sheet.addEventListener('click', onClick); },
+      onClose: function () { V.sheet = null; }
+    });
+  };
 
   App.on('nest', function () {
+    if (V.sheet) V.sheet.innerHTML = climate();
     if (!V.el || !V.el.firstChild) return;
-    paintPart('.hc-climate', climate()); paintPart('.hc-cams', cams());
+    paintClimate(); paintPart('.hc-cams', cams());
   });
 
   App.register('control', {
@@ -465,7 +478,7 @@
           '</div>';
         el.addEventListener('click', onClick);
       }
-      paintPart('.hc-climate', climate());
+      paintClimate();
       paintPart('.hc-cams', cams());
       paintPart('.hc-media', media());
       paintPlugs();

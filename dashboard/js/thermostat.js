@@ -38,7 +38,7 @@
   }
 
   // 270° dial: angles in degrees clockwise from 12 o'clock, -135 … +135
-  function dial(v) {
+  function dial(v, mini) {
     var size = 240, mid = size / 2, r = 104;
     function ang(t) { return -135 + Math.max(0, Math.min(1, (t - LOW) / (HIGH - LOW))) * 270; }
     function pt(a) { var rad = a * Math.PI / 180; return [mid + r * Math.sin(rad), mid - r * Math.cos(rad)]; }
@@ -57,12 +57,12 @@
       if (v.act === 'cooling') out += '<path class="kt-dial-active is-cool" d="' + arc(ang(cur), ang(v.mode === 'auto' ? v.cool : v.set)) + '"/>';
     }
     var p = pt(ang(cur));
-    out += '<circle class="kt-dial-current" cx="' + p[0].toFixed(2) + '" cy="' + p[1].toFixed(2) + '" r="6"/>';
+    out += '<circle class="kt-dial-current" cx="' + p[0].toFixed(2) + '" cy="' + p[1].toFixed(2) + '" r="' + (mini ? 13 : 6) + '"/>';
     handles.forEach(function (h) {
       var q = pt(ang(h[0]));
-      out += '<circle class="kt-dial-handle is-' + h[1] + '" cx="' + q[0].toFixed(2) + '" cy="' + q[1].toFixed(2) + '" r="12"/>';
+      out += '<circle class="kt-dial-handle is-' + h[1] + '" cx="' + q[0].toFixed(2) + '" cy="' + q[1].toFixed(2) + '" r="' + (mini ? 22 : 12) + '"/>';
     });
-    return '<svg class="kt-dial-svg" viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true">' + out + '</svg>';
+    return '<svg class="kt-dial-svg' + (mini ? ' is-mini' : '') + '" viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true">' + out + '</svg>';
   }
 
   function chip(status, extra) {
@@ -118,7 +118,29 @@
       '</section>';
   };
 
-  // The small pill: "19° › 21.5°" with the activity icon and colour. Tapping it opens the full card (the Home tab).
+  // The at-a-glance tile: read-only, one button that opens the full card in a sheet (App.thermostatSheet, js/views/control.js).
+  // Not shown: the Eco range, "ready in" time and schedule — the device data this app loads doesn't include them.
+  T.tile = function () {
+    var c = D.climate, v = view(c), a = ACT[v.status];
+    var target = v.mode === 'off' || v.eco ? null : v.mode === 'auto' ? fmtRange(v.heat, v.cool) : fmt(v.mode === 'cool' ? v.cool : v.heat);
+    var line;
+    if (v.mode === 'off') line = 'Thermostat off';
+    else if (v.act === 'heating') line = 'Heating to <b>' + target + '</b>';
+    else if (v.act === 'cooling') line = 'Cooling to <b>' + target + '</b>';
+    else if (v.eco) line = 'Eco';
+    else if (v.mode === 'auto') line = 'Keeping <b>' + target + '</b>';
+    else line = 'Set to <b>' + target + '</b>';
+    var extras = (c.humidity != null ? '<span>' + App.icon('droplet', 16) + Math.round(c.humidity) + '%</span>' : '') +
+      (c.fan && c.fan.on ? '<span>' + App.icon('fan', 16, 'kt-spin') + 'Fan on</span>' : '');
+    return '<button type="button" class="kt-ttile is-' + a.tone + '" data-thermo aria-label="' + App.esc(c.room || 'Thermostat') + ': ' + fmt(c.current) + ' inside, ' +
+      (v.status === 'off' ? 'off' : a.word.toLowerCase() + (target ? ', set to ' + target : '')) + '. Open thermostat">' +
+      '<div class="kt-ttile-head"><span class="kt-ttile-room">' + App.esc(c.room || 'Thermostat') + '</span>' + chip(v.status) + '</div>' +
+      '<div class="kt-ttile-body"><div class="kt-ttile-main"><span class="kt-ttile-now">' + fmt(c.current) + '</span><span class="kt-ttile-line">' + line + '</span></div>' +
+        '<div class="kt-ttile-dial" aria-hidden="true">' + dial(v, true) + App.icon(a.icon, 22, 'kt-ttile-dial-icon') + '</div></div>' +
+      (extras ? '<div class="kt-ttile-extras">' + extras + '</div>' : '') + '</button>';
+  };
+
+  // The small pill (for a header bar; nothing in the app uses it right now): "19° › 21.5°" with the activity icon and colour. Tapping it opens the full card (the Home tab).
   T.compact = function () {
     var c = D.climate, v = view(c), a = ACT[v.status];
     var target = v.mode === 'off' ? null : v.eco ? 'Eco' : v.mode === 'auto' ? fmtRange(v.heat, v.cool) : fmt(v.set);

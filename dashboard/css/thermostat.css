@@ -71,3 +71,32 @@
 .kt-tstat-row--mode .kt-seg { flex: 1; min-width: 0; }
 .kt-tstat-row--mode .kt-seg-btn { flex: 1 1 auto; min-width: var(--touch-min); padding: 0 var(--space-3); font-size: 15px; white-space: nowrap; }
 .kt-tstat-row--mode .kt-eco-btn { flex: none; justify-content: center; width: var(--touch-min); padding: 0; } /* leaf only: the word is in aria-label and the header chip */
+
+/* mini dial inside the tile */
+.kt-dial-svg.is-mini .kt-dial-track, .kt-dial-svg.is-mini .kt-dial-range, .kt-dial-svg.is-mini .kt-dial-active { stroke-width: 24; }
+.kt-dial-svg.is-mini .kt-dial-handle { stroke-width: 8; }
+.kt-dial-svg.is-mini .kt-dial-current { stroke-width: 6; }
+.kt-spin { animation: kt-spin 2.4s linear infinite; }
+
+/* ThermostatTile */
+.kt-ttile { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; max-width: 360px; box-sizing: border-box; padding: var(--space-4) var(--space-4) var(--space-4) var(--space-6); border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); color: var(--ink); text-align: left; cursor: pointer; }
+.kt-ttile:active { transform: scale(.98); }
+.kt-ttile-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.kt-ttile-room { font-size: var(--fs-event); line-height: var(--lh-event); font-weight: 600; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kt-ttile .kt-tstat-chip { min-height: 28px; padding: 0 10px; font-size: var(--fs-label); line-height: var(--lh-label); }
+.kt-ttile-body { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.kt-ttile-main { display: flex; flex-direction: column; min-width: 0; }
+.kt-ttile-now { font-family: var(--font-display); font-size: 56px; line-height: 60px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.kt-ttile-line { font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 500; color: var(--ink-muted); }
+.kt-ttile-line b { font-weight: 700; color: var(--ink); }
+.kt-ttile.is-heat .kt-ttile-line b { color: var(--heat); }
+.kt-ttile.is-cool .kt-ttile-line b { color: var(--cool); }
+.kt-ttile.is-eco .kt-ttile-line b { color: var(--eco); }
+.kt-ttile-dial { position: relative; flex: none; width: 88px; height: 88px; }
+.kt-ttile-dial-icon { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--ink-muted); }
+.kt-ttile.is-heat .kt-ttile-dial-icon { color: var(--heat); }
+.kt-ttile.is-cool .kt-ttile-dial-icon { color: var(--cool); }
+.kt-ttile.is-eco .kt-ttile-dial-icon { color: var(--eco); }
+.kt-ttile-extras { display: flex; gap: var(--space-4); font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 500; color: var(--ink-muted); }
+.kt-ttile-extras > span { display: inline-flex; align-items: center; gap: 4px; }
+@media (prefers-reduced-motion: reduce) { .kt-spin, .kt-tstat-chip.is-fan .i { animation: none; } }

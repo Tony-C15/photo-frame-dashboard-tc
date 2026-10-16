@@ -93,13 +93,16 @@
 /* ---- side column */
 .h-side { grid-column: 8 / 13; display: grid; grid-template-rows: 232px 1fr; align-content: start; gap: var(--space-4); min-height: 0; }
 
-.h-low { min-height: 0; display: grid; grid-template-columns: 1fr 224px; gap: var(--space-4); }
-.h-pair { min-height: 0; display: grid; grid-template-rows: 1fr 1fr; gap: var(--space-3); }
+.h-low { min-height: 0; display: grid; grid-template-columns: 1fr 312px; gap: var(--space-4); }
+.h-pair { min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: var(--space-3); }
 .h-pair .card { padding: var(--space-2) var(--space-3); min-height: 0; overflow: hidden; justify-content: center; }
 .h-pair .h-stat .num { font-size: 32px; line-height: 36px; }
 .h-pair .h-recent li:nth-child(n+3) { display: none; }
 .h-pair .h-st-row { min-height: 0; }
 .h-shop, .h-status { display: flex; flex-direction: column; gap: var(--space-1); }
+.h-status { min-height: 0; justify-content: center; }
+.h-status > .card { padding: var(--space-2) var(--space-3); }
+.h-status > .kt-ttile { padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); }
 .h-stat { display: flex; align-items: baseline; gap: var(--space-2); }
 .h-stat .num { font-family: var(--font-display); font-weight: 400; font-size: var(--fs-display); line-height: var(--lh-display); }
 .h-stat small { font-size: var(--fs-meta); color: var(--ink-muted); }

@@ -119,3 +119,6 @@
 .fan-opt { height: 84px; border-radius: var(--radius-md); border: 2px solid var(--line-strong); font-size: 22px; font-weight: 600; display: grid; place-items: center; }
 .fan-opt:active { background: var(--plum); color: var(--on-plum); }
 .hc-cams .cam { aspect-ratio: auto; height: 100%; }
+.sheet--thermo { width: 400px; max-height: 784px; }
+.sheet--thermo .kt-tstat { box-shadow: none; max-width: none; }
+.sheet--thermo .kt-tstat-head { padding-right: 56px; } /* clear of the close button */
