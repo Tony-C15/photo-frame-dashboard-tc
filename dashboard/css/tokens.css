@@ -33,6 +33,11 @@
   --alert: #ad3a0a;
   --sun: #f2a93b;
 
+  /* thermostat */
+  --heat: #a84c06; --heat-soft: #fdf0e1;
+  --cool: #1a66ab; --cool-soft: #e3effa;
+  --eco: #2a7330;  --eco-soft: #e6f3e4;
+
   /* members (solid = who, soft = their things) */
   --member-coral: #fb8072;   --member-coral-soft: #fde4e1;
   --member-apricot: #fdbf6f; --member-apricot-soft: #fef0dc;
@@ -71,7 +76,7 @@
   --shadow-raised: 0 8px 24px rgba(16, 24, 40, .14);
 
   /* sizes */
-  --touch-min: 48px; --avatar-sm: 24px; --avatar-md: 40px; --fab-size: 64px; --rail-width: 88px;
+  --touch-min: 48px; --avatar-sm: 24px; --avatar-md: 40px; --fab-size: 64px; --rail-width: 88px; --dial-size: 240px;
 
   /* motion */
   --ease: ease;

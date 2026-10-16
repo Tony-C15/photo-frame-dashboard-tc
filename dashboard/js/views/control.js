@@ -9,30 +9,10 @@
   try { SP.sel = localStorage.getItem('hc.spk'); } catch (e) { /* ignore */ }
 
   // ------------------------------------------------------------ thermostat
-  function verb(c) {
-    if (c.mode === 'off') return 'Off';
-    if (c.eco) return 'Eco';
-    if (c.live && c.hvac) return c.hvac === 'HEATING' ? 'Heating' : c.hvac === 'COOLING' ? 'Cooling' : 'Holding';
-    return c.set > c.current ? 'Heating' : c.set < c.current ? 'Cooling' : 'Holding';
-  }
-  function setText(c) {
-    if (c.live && c.mode === 'auto' && c.cool != null && c.heat != null) return App.deg(c.heat) + '–' + App.deg(c.cool);
-    var v = App.deg(c.set);
-    return c.live ? String(v) : v.toFixed(1).replace('.0', '');
-  }
   function climate() {
     var c = D.climate;
     if (!c.live) return '<div class="label label--light">Climate</div><div class="th-none"><b>' + (App.nest.error === 'rate limited' ? 'Nest is busy' : 'Thermostat not connected') + '</b><span>' + (App.nest.error === 'rate limited' ? 'Google is rate-limiting requests. Retrying in a minute.' : 'Nest isn’t reachable. Check the server and the Nest setup.') + '</span></div>';
-    var v = verb(c), modes = [['heat', 'Heat'], ['cool', 'Cool'], ['auto', 'Auto'], ['off', 'Off']].filter(function (m) { return !c.live || !c.modes || c.modes.indexOf(m[0]) > -1; });
-    return '<div class="label label--light">Climate · ' + App.esc(c.room || 'Main floor') + (c.live && c.online === false ? ' · offline' : '') + '</div>' +
-      '<div class="th-main"><button class="th-btn" data-temp="-1" aria-label="Cooler">' + App.icon('minus', 36) + '</button>' +
-      '<div class="th-set"><span class="num' + (c.eco ? '' : setText(c).length >= 5 ? ' th-range' : setText(c).length === 4 ? ' th-mid' : '') + '">' + (c.eco ? 'Eco' : setText(c) + '°') + '</span><small>' + (c.mode === 'auto' && c.live ? 'Heat – cool' : 'Set to') + '</small></div>' +
-      '<button class="th-btn" data-temp="1" aria-label="Warmer">' + App.icon('plus', 36) + '</button></div>' +
-      '<div class="th-now"><span><b class="num">' + App.deg(c.current) + '°</b> inside</span><span class="th-verb th-verb--' + v.toLowerCase() + '">' + v + '</span><span><b class="num">' + c.humidity + '%</b> humidity</span></div>' +
-      '<div class="seg">' + modes.map(function (m) {
-        return '<button class="' + (c.mode === m[0] ? 'is-on' : '') + '" data-tmode="' + m[0] + '">' + m[1] + '</button>';
-      }).join('') + '</div>' +
-      (c.fan ? '<button class="th-fan' + (c.fan.on ? ' is-on' : '') + '" data-fan>' + App.icon('fan', 22) + '<span>Fan</span><b>' + fanText(c.fan) + '</b></button>' : '');
+    return App.thermostat.card(fanText);
   }
 
   // ------------------------------------------------------------ cameras (Nest)
@@ -327,7 +307,9 @@
       return repaintMedia();
     }
     if ((t = e.target.closest('[data-ncam]'))) return App.nestCameraSheet(App.nest.cameras.filter(function (c) { return c.id === t.dataset.ncam; })[0]);
-    if ((t = e.target.closest('[data-temp]'))) return adjustTemp(+t.dataset.temp);
+    if ((t = e.target.closest('[data-temp]'))) return adjustTemp(+t.dataset.temp, t.dataset.which);
+    if (e.target.closest('[data-eco]')) return toggleEco();
+    if (e.target.closest('[data-fanoff]')) return setFan(false);
     if ((t = e.target.closest('[data-tmode]'))) return setMode(t.dataset.tmode);
   }
 
@@ -371,20 +353,28 @@
       App.nest.load();
     });
   }
-  function adjustTemp(dir) {
+  function toggleEco() {
+    var c = D.climate;
+    if (!c.live || c.mode === 'off') return;
+    var on = !c.eco;
+    App.nest.command(c.id, 'sdm.devices.commands.ThermostatEco.SetMode', { mode: on ? 'MANUAL_ECO' : 'OFF' }).then(function () { App.toast(on ? 'Eco mode on' : 'Eco mode off', { icon: 'thermo', ms: 2500 }); App.nest.load(true); },
+      function (err) { App.toast(err.message === 'rate limited' ? 'Nest is rate-limiting changes · try again in a minute' : 'Couldn’t reach the thermostat', { tone: 'error', icon: 'bolt' }); });
+  }
+  // which: 'heat' | 'cool' in Heat·Cool (each has its own buttons); otherwise the single set point.
+  function adjustTemp(dir, which) {
     var c = D.climate;
     if (!c.live) return;
-    if (c.eco) {
-      App.nest.command(c.id, 'sdm.devices.commands.ThermostatEco.SetMode', { mode: 'OFF' }).then(function () { App.toast('Eco mode off', { icon: 'thermo', ms: 2500 }); App.nest.load(); },
-        function (err) { App.toast(err.message === 'rate limited' ? 'Nest is rate-limiting changes · try again in a minute' : 'Couldn’t reach the thermostat', { tone: 'error', icon: 'bolt' }); });
-      return;
-    }
-    if (c.mode === 'off') return App.toast('Turn the thermostat on first · pick Heat, Cool or Auto', { icon: 'thermo', ms: 2500 });
+    if (c.eco) return; // Eco temperatures are set on the thermostat itself
+    if (c.mode === 'off') return App.toast('Turn the thermostat on first · pick Heat, Cool or Heat·Cool', { icon: 'thermo', ms: 2500 });
     var step = App.nest.step() * dir, f = App.nest.scale === 'FAHRENHEIT';
     // snap to the thermostat's own grid first (whole °F, half °C), then step — rounding °C to whole numbers made ↓ a no-op from x.5
     var shift = function (v) { var shown = App.deg(v); return App.nest.toC((f ? Math.round(shown) : Math.round(shown * 2) / 2) + step); };
     var clamp = function (v) { return Math.max(9, Math.min(32, v)); };
-    if (c.mode === 'auto') { c.heat = clamp(shift(c.heat)); c.cool = clamp(shift(c.cool)); }
+    if (c.mode === 'auto') {
+      var gap = f ? 5 / 3 : 1.5; // heat stays at least 1.5 °C (3 °F) below cool
+      if (which === 'cool') c.cool = Math.max(clamp(shift(c.cool)), c.heat + gap);
+      else c.heat = Math.min(clamp(shift(c.heat)), c.cool - gap);
+    }
     else { c.set = clamp(shift(c.set)); if (c.mode === 'heat') c.heat = c.set; else c.cool = c.set; }
     want.temp = true; dirty();
     climateChanged();

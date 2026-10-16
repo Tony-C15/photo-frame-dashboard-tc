@@ -226,17 +226,11 @@
       }).join('') + '</ul>';
   }
 
-  // Thermostat card: the temperature is the point; below it, what the thermostat is doing (no "inside").
+  // Thermostat card: the compact pill (inside › target). Tapping it opens the full card on the Home tab.
   function status() {
     var c = D.climate;
     if (!c.live) return '<div class="label">Home</div><div class="h-st-row is-muted"><span>Thermostat not connected</span></div>';
-    var state = c.mode === 'off' ? ['Off', ''] : c.eco ? ['Eco', ''] :
-      c.hvac === 'HEATING' ? ['Heating', ' is-heat'] : c.hvac === 'COOLING' ? ['Cooling', ' is-cool'] : ['Holding', ''];
-    var pills = '<span class="h-st-pill' + state[1] + '">' + state[0] + '</span>' +
-      (c.fan && c.fan.on ? '<span class="h-st-pill is-fan">' + App.icon('fan', 16) + 'Fan on</span>' : '');
-    return '<div class="label">Home</div>' +
-      '<div class="h-st-row">' + App.icon('thermo', 32) + '<b class="h-st-temp">' + App.deg(c.current) + '°</b></div>' +
-      '<div class="h-st-pills">' + pills + '</div>';
+    return '<div class="label">Home</div><div class="h-st-pills">' + App.thermostat.compact() + '</div>';
   }
 
   function paint() {
@@ -249,11 +243,7 @@
     el.querySelector('.h-waste').innerHTML = waste();
     el.querySelector('.h-shop').innerHTML = shopping();
     el.querySelector('.h-clinic').innerHTML = clinic();
-    var st = el.querySelector('.h-status');
-    st.innerHTML = status();
-    // The whole card takes the colour of what the thermostat is doing, so heating / cooling reads from across the room.
-    st.classList.toggle('is-heating', !!st.querySelector('.h-st-pill.is-heat'));
-    st.classList.toggle('is-cooling', !!st.querySelector('.h-st-pill.is-cool'));
+    el.querySelector('.h-status').innerHTML = status();
   }
 
   App.register('home', {
@@ -265,7 +255,7 @@
           '<div class="h-weather" data-go="weather"></div>' +
           '<div class="h-bath"></div>' +
           '<div class="h-main"><div class="h-hero-slot"></div><div class="h-low"><div class="h-lanes"></div>' +
-          '  <div class="h-pair"><button class="h-shop card" data-go="shopping"></button><button class="h-status card" data-go="control"></button></div></div></div>' +
+          '  <div class="h-pair"><button class="h-shop card" data-go="shopping"></button><div class="h-status card"></div></div></div></div>' +
           '<div class="h-side">' +
           '  <div class="h-waste card"></div>' +
           '  <button class="h-clinic card" data-clinic></button>' +
