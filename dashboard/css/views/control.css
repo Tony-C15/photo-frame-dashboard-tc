@@ -1,6 +1,10 @@
 /* Home control */
 .hc { height: 100%; display: grid; grid-template-columns: 1fr 360px; grid-template-rows: minmax(0, 1fr); gap: 20px; }
-.hc-left { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+.hc-left { display: flex; flex-direction: column; gap: 14px; min-height: 0; overflow: hidden; } /* never scrolls: the cameras give up height instead */
+.hc-left > .hc-cams { flex: 1 1 0; min-height: 96px; display: flex; flex-direction: column; }
+.hc-left > .hc-plugs, .hc-left > .hc-media { flex: none; }
+.hc-cams .room { flex: 1; min-height: 0; display: flex; flex-direction: column; margin-bottom: 0; }
+.hc-cams .cams { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
 .hc-right { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
 .room { margin-bottom: 18px; }
 .room-h { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
@@ -29,7 +33,6 @@
 .hc-climate { display: flex; flex-direction: column; gap: 14px; }
 .hc-right > .hc-climate { flex: 1; min-height: 0; } /* the card fills the column's height */
 .hc-climate > .kt-tstat { flex: 1; justify-content: space-between; gap: var(--space-3); padding-bottom: var(--space-4); } /* tightened so Heat·Cool (the tallest state) fits the 800px frame */
-.hc-left > .hc-media { margin-top: auto; flex: none; }
 /* cameras + media */
 .cams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .cam { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 11; background: var(--surface-sunken); color: var(--ink); }
@@ -103,8 +106,8 @@
 .plug-note { font-size: 16px; color: var(--ink-muted); margin: 4px 2px 10px; }
 .tile-state small { display: block; font-size: 13px; font-weight: 600; opacity: .7; }
 
-/* layout: cameras + plugs on the left, thermostat + speakers on the right */
-.hc-left { overflow-y: auto; gap: 22px; padding-bottom: 20px; }
+/* layout: cameras, plugs and speakers on the left, thermostat on the right */
+.hc-left { gap: 16px; }
 .hc-left .cams { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .hc-left .cam { aspect-ratio: 16 / 9; }
 .hc-left .cam-name { font-size: 16px; left: 14px; bottom: 12px; }
@@ -115,4 +118,4 @@
 .fan-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 6px 0 8px; }
 .fan-opt { height: 84px; border-radius: var(--radius-md); border: 2px solid var(--line-strong); font-size: 22px; font-weight: 600; display: grid; place-items: center; }
 .fan-opt:active { background: var(--plum); color: var(--on-plum); }
-.hc-cams .cam { aspect-ratio: 16 / 7; } /* leaves room for the speakers under the cameras on the 800px frame */
+.hc-cams .cam { aspect-ratio: auto; height: 100%; }
