@@ -460,8 +460,8 @@
       if (!V.el) {
         V.el = el;
         el.innerHTML = '<div class="hc">' +
-          '<div class="hc-left"><div class="hc-cams"></div><div class="hc-plugs"></div></div>' +
-          '<div class="hc-right"><div class="hc-climate"></div><div class="hc-media card"></div></div>' +
+          '<div class="hc-left"><div class="hc-cams"></div><div class="hc-plugs"></div><div class="hc-media card"></div></div>' +
+          '<div class="hc-right"><div class="hc-climate"></div></div>' +
           '</div>';
         el.addEventListener('click', onClick);
       }
