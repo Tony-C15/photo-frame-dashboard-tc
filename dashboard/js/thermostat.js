@@ -109,7 +109,7 @@
         '<div class="kt-seg" role="radiogroup" aria-label="Mode">' + modes.map(function (m) {
           return '<button type="button" role="radio" aria-checked="' + (c.mode === m[0]) + '" class="kt-seg-btn' + (c.mode === m[0] ? ' is-on' : '') + '" data-tmode="' + m[0] + '">' + m[1] + '</button>';
         }).join('') + '</div>' +
-        '<button type="button" class="kt-eco-btn' + (v.eco ? ' is-on' : '') + '" data-eco aria-pressed="' + v.eco + '"' + (c.mode === 'off' ? ' disabled' : '') + '>' + App.icon('leaf', 18) + 'Eco</button></div></div>' +
+        '<button type="button" class="kt-eco-btn' + (v.eco ? ' is-on' : '') + '" data-eco aria-pressed="' + v.eco + '"' + (c.mode === 'off' ? ' disabled' : '') + ' aria-label="Eco">' + App.icon('leaf', 22) + '</button></div></div>' +
       (c.fan ? '<div class="kt-tstat-row"><span class="kt-tstat-row-label">' + App.icon('fan', 18) + 'Fan</span><div class="kt-tstat-row-controls">' +
         '<div class="kt-seg" role="radiogroup" aria-label="Fan">' +
           '<button type="button" role="radio" aria-checked="' + !fanOn + '" class="kt-seg-btn' + (fanOn ? '' : ' is-on') + '" data-fanoff>Auto</button>' +
