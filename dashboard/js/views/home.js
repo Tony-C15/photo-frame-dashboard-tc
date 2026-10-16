@@ -226,7 +226,7 @@
       }).join('') + '</ul>';
   }
 
-  // Thermostat tile: read-only; tapping it opens the full thermostat in a sheet (App.thermostatSheet).
+  // Thermostat tile: read-only; tapping it goes to the Home tab, where the full thermostat is.
   function status() {
     var c = D.climate;
     if (!c.live) return '<div class="card"><div class="label">Home</div><div class="h-st-row is-muted"><span>Thermostat not connected</span></div></div>';
@@ -264,7 +264,7 @@
           var ev = e.target.closest('[data-ev]');
           if (ev) { App.eventSheet(App.findEvent(ev.dataset.ev)); return; }
           if (e.target.closest('[data-clinic]')) { loadClinic(); return; }
-          if (e.target.closest('[data-thermo]')) { App.thermostatSheet(); return; }
+          if (e.target.closest('[data-thermo]')) { App.go('control'); return; }
           var g = e.target.closest('[data-go]');
           if (g) App.go(g.dataset.go);
         });

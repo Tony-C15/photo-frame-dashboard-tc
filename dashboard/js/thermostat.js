@@ -118,7 +118,7 @@
       '</section>';
   };
 
-  // The at-a-glance tile: read-only, one button that opens the full card in a sheet (App.thermostatSheet, js/views/control.js).
+  // The at-a-glance tile: read-only, one button that goes to the Home tab, where the full card is.
   // Not shown: the Eco range, "ready in" time and schedule — the device data this app loads doesn't include them.
   T.tile = function () {
     var c = D.climate, v = view(c), a = ACT[v.status];
@@ -130,8 +130,7 @@
     else if (v.eco) line = 'Eco';
     else if (v.mode === 'auto') line = 'Keeping <b>' + target + '</b>';
     else line = 'Set to <b>' + target + '</b>';
-    var extras = (c.humidity != null ? '<span>' + App.icon('droplet', 16) + Math.round(c.humidity) + '%</span>' : '') +
-      (c.fan && c.fan.on ? '<span>' + App.icon('fan', 16, 'kt-spin') + 'Fan on</span>' : '');
+    var extras = (c.fan && c.fan.on ? '<span>' + App.icon('fan', 16, 'kt-spin') + 'Fan on</span>' : '');
     return '<button type="button" class="kt-ttile is-' + a.tone + '" data-thermo aria-label="' + App.esc(c.room || 'Thermostat') + ': ' + fmt(c.current) + ' inside, ' +
       (v.status === 'off' ? 'off' : a.word.toLowerCase() + (target ? ', set to ' + target : '')) + '. Open thermostat">' +
       '<div class="kt-ttile-head"><span class="kt-ttile-room">' + App.esc(c.room || 'Thermostat') + '</span>' + chip(v.status) + '</div>' +

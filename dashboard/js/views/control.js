@@ -292,8 +292,7 @@
 
   // Granular updates: an action repaints only what it touched (full paint() rebuilds ~270 nodes,
   // which costs ~350ms on the wall tablet).
-  // the Home tab's card, and the sheet opened from the Today tile, show the same thermostat
-  function paintClimate() { paintPart('.hc-climate', climate()); if (V.sheet) V.sheet.innerHTML = climate(); }
+  function paintClimate() { paintPart('.hc-climate', climate()); }
   function paintPart(sel, html) { if (V.el) V.el.querySelector(sel).innerHTML = html; }
 
   function onClick(e) {
@@ -450,20 +449,9 @@
     });
   };
 
-  App.on('minute', function () { if ((V.sheet || (V.el && V.el.firstChild)) && D.climate.fan && D.climate.fan.on) paintClimate(); });
-
-  // The full thermostat in a sheet, opened from the Today tile. Same card, same handlers as the Home tab.
-  App.thermostatSheet = function () {
-    if (!D.climate.live) return;
-    App.sheet('<div class="sheet-thermo">' + climate() + '</div>', {
-      cls: 'sheet--thermo',
-      onMount: function (sheet) { V.sheet = sheet.querySelector('.sheet-thermo'); sheet.addEventListener('click', onClick); },
-      onClose: function () { V.sheet = null; }
-    });
-  };
+  App.on('minute', function () { if (V.el && V.el.firstChild && D.climate.fan && D.climate.fan.on) paintClimate(); });
 
   App.on('nest', function () {
-    if (V.sheet) V.sheet.innerHTML = climate();
     if (!V.el || !V.el.firstChild) return;
     paintClimate(); paintPart('.hc-cams', cams());
   });
