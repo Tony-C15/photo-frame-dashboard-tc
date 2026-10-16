@@ -1,0 +1,102 @@
+/* Thermostat (Kitchen Table): full card and compact pill. Markup comes from js/thermostat.js. */
+.kt-iconbtn { display: inline-grid; place-items: center; width: var(--touch-min); height: var(--touch-min); border-radius: var(--radius-pill); border: 0; background: var(--surface); color: var(--ink); }
+.kt-iconbtn-outline { border: 1px solid var(--line-strong); }
+.kt-iconbtn:active { background: var(--surface-sunken); }
+.kt-seg { display: inline-flex; padding: var(--space-1); gap: var(--space-1); background: var(--surface-sunken); border-radius: var(--radius-md); }
+.kt-seg-btn { min-height: var(--touch-min); padding: 0 var(--space-3); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--ink-muted); font-size: 15px; font-weight: 600; }
+.kt-seg-btn.is-on { background: var(--surface); color: var(--plum); box-shadow: var(--shadow-card); }
+
+.kt-tstat { display: flex; flex-direction: column; gap: var(--space-4); width: 100%; max-width: 440px; box-sizing: border-box; padding: var(--space-4) var(--space-6) var(--space-6); background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); color: var(--ink); }
+.kt-tstat-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.kt-tstat-room { margin: 0; font-size: var(--fs-title); line-height: var(--lh-title); font-weight: 600; }
+.kt-tstat-room small { font-size: var(--fs-meta); font-weight: 500; color: var(--ink-muted); }
+.kt-tstat-chips { display: flex; gap: var(--space-2); }
+.kt-tstat-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 var(--space-3); border-radius: var(--radius-pill); font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 600; white-space: nowrap; }
+.kt-tstat-chip.is-heat { background: var(--heat-soft); color: var(--heat); }
+.kt-tstat-chip.is-cool { background: var(--cool-soft); color: var(--cool); }
+.kt-tstat-chip.is-eco { background: var(--eco-soft); color: var(--eco); }
+.kt-tstat-chip.is-idle, .kt-tstat-chip.is-off, .kt-tstat-chip.is-fan { background: var(--surface-sunken); color: var(--ink-muted); }
+.kt-tstat-chip.is-fan .i { animation: kt-spin 2.4s linear infinite; }
+@keyframes kt-spin { to { transform: rotate(360deg); } }
+
+.kt-dial { position: relative; align-self: center; width: var(--dial-size); height: var(--dial-size); }
+.kt-dial-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.kt-dial-track { fill: none; stroke: var(--surface-sunken); stroke-width: 14; stroke-linecap: round; }
+.kt-dial-range { fill: none; stroke: var(--line-strong); stroke-width: 14; stroke-linecap: round; opacity: .35; }
+.kt-dial-active { fill: none; stroke-width: 14; stroke-linecap: round; }
+.kt-dial-active.is-heat { stroke: var(--heat); }
+.kt-dial-active.is-cool { stroke: var(--cool); }
+.kt-dial-current { fill: var(--ink); stroke: var(--surface); stroke-width: 3; }
+.kt-dial-handle { stroke: var(--surface); stroke-width: 4; }
+.kt-dial-handle.is-heat { fill: var(--heat); }
+.kt-dial-handle.is-cool { fill: var(--cool); }
+.kt-dial-center { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding-bottom: 8px; pointer-events: none; }
+.kt-dial-label { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 600; }
+.kt-dial-label.is-heat { color: var(--heat); }
+.kt-dial-label.is-cool { color: var(--cool); }
+.kt-dial-label.is-eco { color: var(--eco); }
+.kt-dial-label.is-muted { color: var(--ink-muted); }
+.kt-dial-big { font-family: var(--font-display); font-size: 72px; line-height: 76px; font-variant-numeric: tabular-nums; color: var(--ink); letter-spacing: -0.02em; }
+.kt-dial-big.is-range { font-size: 48px; line-height: 60px; margin: 8px 0; }
+.kt-dial-big.is-off { color: var(--ink-muted); font-size: 56px; }
+.kt-dial-sub { font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 500; color: var(--ink-muted); }
+.kt-dial-buttons { position: absolute; left: 0; right: 0; bottom: -6px; display: flex; justify-content: space-between; padding: 0 30px; }
+
+.kt-tstat-steppers { display: flex; flex-direction: column; gap: var(--space-2); }
+.kt-tstat-stepper { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-1); border-radius: var(--radius-md); background: var(--surface-sunken); }
+.kt-tstat-stepper-val { font-size: var(--fs-body); line-height: 22px; font-weight: 600; }
+.kt-tstat-stepper-val.is-heat { color: var(--heat); }
+.kt-tstat-stepper-val.is-cool { color: var(--cool); }
+
+.kt-tstat-readings { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--space-2) var(--space-6); font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 500; color: var(--ink-muted); }
+.kt-tstat-readings > span { display: inline-flex; align-items: center; gap: 6px; }
+
+.kt-tstat-row { display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--line); }
+.kt-tstat-row-label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-label); line-height: var(--lh-label); font-weight: 600; letter-spacing: .01em; color: var(--ink-muted); }
+.kt-tstat-row-controls { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-3); }
+.kt-eco-btn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--touch-min); padding: 0 var(--space-4); border: 1px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font-size: var(--fs-meta); font-weight: 600; }
+.kt-eco-btn.is-on { background: var(--eco-soft); border-color: var(--eco); color: var(--eco); }
+.kt-eco-btn:disabled { opacity: .45; }
+.kt-tstat-fan-text { font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 500; color: var(--ink-muted); }
+
+.kt-tstat-compact { display: inline-flex; align-items: center; gap: var(--space-2); box-sizing: border-box; height: var(--touch-min); padding: 0 var(--space-4); border: 0; border-radius: var(--radius-pill); cursor: pointer; background: var(--surface-sunken); color: var(--ink-muted); }
+.kt-tstat-compact.is-heat { background: var(--heat-soft); color: var(--heat); }
+.kt-tstat-compact.is-cool { background: var(--cool-soft); color: var(--cool); }
+.kt-tstat-compact.is-eco { background: var(--eco-soft); color: var(--eco); }
+.kt-tstat-compact-now { font-family: var(--font-display); font-size: 28px; line-height: 34px; color: var(--ink); }
+.kt-tstat-compact-target { display: inline-flex; align-items: center; gap: 2px; font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 600; }
+
+/* Mode row on one line: the segments share the width, Eco sits beside them */
+.kt-tstat-row--mode .kt-tstat-row-controls { flex-wrap: nowrap; gap: var(--space-2); }
+.kt-tstat-row--mode .kt-seg { flex: 1; min-width: 0; }
+.kt-tstat-row--mode .kt-seg-btn { flex: 1 1 auto; min-width: var(--touch-min); padding: 0 var(--space-3); font-size: 15px; white-space: nowrap; }
+.kt-tstat-row--mode .kt-eco-btn { flex: none; justify-content: center; width: var(--touch-min); padding: 0; } /* leaf only: the word is in aria-label and the header chip */
+
+/* mini dial inside the tile */
+.kt-dial-svg.is-mini .kt-dial-track, .kt-dial-svg.is-mini .kt-dial-range, .kt-dial-svg.is-mini .kt-dial-active { stroke-width: 24; }
+.kt-dial-svg.is-mini .kt-dial-handle { stroke-width: 8; }
+.kt-dial-svg.is-mini .kt-dial-current { stroke-width: 6; }
+.kt-spin { animation: kt-spin 2.4s linear infinite; }
+
+/* ThermostatTile */
+.kt-ttile { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; max-width: 360px; box-sizing: border-box; padding: var(--space-4) var(--space-4) var(--space-4) var(--space-6); border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card); color: var(--ink); text-align: left; cursor: pointer; }
+.kt-ttile:active { transform: scale(.98); }
+.kt-ttile-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.kt-ttile-room { font-size: var(--fs-event); line-height: var(--lh-event); font-weight: 600; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kt-ttile .kt-tstat-chip { min-height: 28px; padding: 0 10px; font-size: var(--fs-label); line-height: var(--lh-label); }
+.kt-ttile-body { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.kt-ttile-main { display: flex; flex-direction: column; min-width: 0; }
+.kt-ttile-now { font-family: var(--font-display); font-size: 56px; line-height: 60px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.kt-ttile-line { font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 500; color: var(--ink-muted); }
+.kt-ttile-line b { font-weight: 700; color: var(--ink); }
+.kt-ttile.is-heat .kt-ttile-line b { color: var(--heat); }
+.kt-ttile.is-cool .kt-ttile-line b { color: var(--cool); }
+.kt-ttile.is-eco .kt-ttile-line b { color: var(--eco); }
+.kt-ttile-dial { position: relative; flex: none; width: 88px; height: 88px; }
+.kt-ttile-dial-icon { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--ink-muted); }
+.kt-ttile.is-heat .kt-ttile-dial-icon { color: var(--heat); }
+.kt-ttile.is-cool .kt-ttile-dial-icon { color: var(--cool); }
+.kt-ttile.is-eco .kt-ttile-dial-icon { color: var(--eco); }
+.kt-ttile-extras { display: flex; gap: var(--space-4); font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 500; color: var(--ink-muted); }
+.kt-ttile-extras > span { display: inline-flex; align-items: center; gap: 4px; }
+@media (prefers-reduced-motion: reduce) { .kt-spin, .kt-tstat-chip.is-fan .i { animation: none; } }

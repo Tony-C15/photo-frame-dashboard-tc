@@ -6,6 +6,7 @@ import './app.js';
 import './system.js';
 import './calendar-source.js';
 import './nest.js';
+import './thermostat.js';
 import './shopping-source.js';
 import './weather.js';
 import './transit.js';
