@@ -32,7 +32,7 @@
 /* climate */
 .hc-climate { display: flex; flex-direction: column; gap: 14px; }
 .hc-right > .hc-climate { flex: 1; min-height: 0; } /* the card fills the column's height */
-.hc-climate > .kt-tstat { flex: 1; justify-content: space-between; gap: var(--space-3); padding-bottom: var(--space-4); } /* tightened so Heat·Cool (the tallest state) fits the 800px frame */
+.hc-climate > .kt-tstat { flex: 1; justify-content: space-between; gap: var(--space-3); padding: var(--space-4); } /* tightened so Heat·Cool (the tallest state) fits the 800px frame */
 /* cameras + media */
 .cams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .cam { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 11; background: var(--surface-sunken); color: var(--ink); }

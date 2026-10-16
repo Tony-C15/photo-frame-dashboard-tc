@@ -65,3 +65,9 @@
 .kt-tstat-compact.is-eco { background: var(--eco-soft); color: var(--eco); }
 .kt-tstat-compact-now { font-family: var(--font-display); font-size: 28px; line-height: 34px; color: var(--ink); }
 .kt-tstat-compact-target { display: inline-flex; align-items: center; gap: 2px; font-size: var(--fs-meta); line-height: var(--lh-meta); font-weight: 600; }
+
+/* Mode row on one line: the segments share the width, Eco sits beside them */
+.kt-tstat-row--mode .kt-tstat-row-controls { flex-wrap: nowrap; gap: 6px; }
+.kt-tstat-row--mode .kt-seg { flex: 1; min-width: 0; }
+.kt-tstat-row--mode .kt-seg-btn { flex: 1 1 auto; min-width: var(--touch-min); padding: 0 4px; font-size: 14px; white-space: nowrap; }
+.kt-tstat-row--mode .kt-eco-btn { flex: none; padding: 0 10px; gap: 4px; font-size: 14px; }

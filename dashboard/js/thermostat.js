@@ -105,7 +105,7 @@
       '</div>' +
       (canAdjust && v.mode === 'auto' ? '<div class="kt-tstat-steppers">' + stepper(v, 'heat', 'Heat') + stepper(v, 'cool', 'Cool') + '</div>' : '') +
       (c.humidity != null ? '<div class="kt-tstat-readings"><span>' + App.icon('droplet', 16) + Math.round(c.humidity) + '% humidity</span></div>' : '') +
-      '<div class="kt-tstat-row"><span class="kt-tstat-row-label">Mode</span><div class="kt-tstat-row-controls">' +
+      '<div class="kt-tstat-row kt-tstat-row--mode"><span class="kt-tstat-row-label">Mode</span><div class="kt-tstat-row-controls">' +
         '<div class="kt-seg" role="radiogroup" aria-label="Mode">' + modes.map(function (m) {
           return '<button type="button" role="radio" aria-checked="' + (c.mode === m[0]) + '" class="kt-seg-btn' + (c.mode === m[0] ? ' is-on' : '') + '" data-tmode="' + m[0] + '">' + m[1] + '</button>';
         }).join('') + '</div>' +
