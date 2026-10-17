@@ -152,12 +152,14 @@
     if (!d) return '<div class="label">Collection</div><p class="h-w-note">' + (W.error ? 'Schedule unavailable · ' + App.esc(W.error) : 'Loading…') + '</p>';
     if (!d.configured) return '<div class="label">Collection</div><p class="h-w-note">Not set up yet</p>';
     var now = App.now(), today = localISO(now);
-    var sunday = localISO(App.addDays(App.dayStart(now), (7 - now.getDay()) % 7)); // end of this Monday–Sunday week
-    // only what's still to come this week (today counts)
+    // From Friday on, look ahead through next week's Sunday too (bins go out the night before)
+    var ahead = now.getDay() === 0 || now.getDay() >= 5;
+    var sunday = localISO(App.addDays(App.dayStart(now), (7 - now.getDay()) % 7 + (ahead ? 7 : 0)));
+    // only what's still to come this week, or next week from Friday (today counts)
     var items = BINS.map(function (b) { return { b: b, date: pickupIn(d.pickups[b[0]], today, sunday) }; })
       .filter(function (x) { return x.date; })
       .sort(function (x, y) { return x.date - y.date; });
-    var head = '<div class="label">Collection · ' + App.esc(d.calendar.replace(/(\d)$/, ' · wk $1')) + '</div>';
+    var head = '<div class="label">Collection · ' + App.esc(d.calendar.replace(/(\d)$/, ' · wk $1')) + (ahead ? ' · next week' : '') + '</div>';
     if (!items.length) {
       var up = BINS.map(function (b) { return { b: b, date: pickupIn(d.pickups[b[0]], today) }; })
         .filter(function (x) { return x.date; }).sort(function (x, y) { return x.date - y.date; })[0];
